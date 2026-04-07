@@ -1,6 +1,7 @@
 aid: openlaws
 name: OpenLaws
-description: 'Law data that enhances your capabilities. '
+description: >-
+  Law data that enhances your capabilities.
 type: Index
 position: Consumer
 access: 3rd-Party
@@ -15,7 +16,8 @@ specificationVersion: '0.19'
 apis:
   - aid: openlaws:openlaws
     name: OpenLaws
-    description: 'Law data that enhances your capabilities. '
+    description: >-
+      Law data that enhances your capabilities.
     humanURL: ' https://openlaws.us/api/'
     tags:
       - API
