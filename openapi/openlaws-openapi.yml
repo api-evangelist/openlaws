@@ -1,0 +1,2238 @@
+openapi: 3.1.0
+info:
+  title: OpenLaws API Documentation
+  version: 1.0.4
+  description: OpenLaws Legal Data API
+  contact:
+    name: OpenLaws PBC
+    url: https://openlaws.us/api
+    email: team@openlaws.us
+  license:
+    name: Commercial
+    url: https://openlaws.us/terms
+servers:
+- url: https://api.openlaws.us
+tags:
+- name: Jurisdictions
+  description: All data (statutes, regulations, caselaw opinions) in OpenLaws are organized into jurisdictions. This allows
+    you to scope searches and lookups to a specific state or federal jurisdiction (or both).
+- name: Laws
+  description: Laws represent a specific law type in a Jurisdiction. For example, Code of Federal Regulations belongs to the
+    FED Jurisdiction and is represented by the law_key `FED-CFR`. Florida Statutes belongs to the FL Jurisdiction and is represented
+    by the law_key `FL-STAT`. Note that case law and case opinions are represented as Opinions that belong to Courts and Jurisdictions
+    rather than Laws.
+- name: Law Divisions
+  description: Divisions represent the hierarchical documents that make up statutes, regulations, and constitutions. Each
+    document has a 'path' which uniquely identifies the document and where it resides in the hierarchy of the law.
+- name: Opinions
+  description: Opinions represent published and unpublished case law opinions. Opinions belong to a Court and Jurisdiction.
+- name: Courts
+  description: Courts issue Opinions and belong to a Jurisdiction.
+paths:
+  /api/v1/jurisdictions:
+    get:
+      summary: List all Jurisdictions
+      description: Returns all valid jurisdictions, coverage data, and metadata for OpenLaws Jurisdictions
+      tags:
+      - Jurisdictions
+      responses:
+        '200':
+          description: GET jurisdictions returns all jurisdictions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Jurisdiction'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+      operationId: listJurisdictions
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions:
+    get:
+      summary: Get a specific Law's Root Divisions
+      description: Root divisions are top of the document hierarchy for a law. Typically, these documents are Titles or Agency
+        document types.
+      tags:
+      - Law Divisions
+      parameters:
+      - name: jurisdiction_key
+        description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most
+          U.S. states and territories.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: AK
+      - name: law_key
+        description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation
+          of a law type joined by a '-' character.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: AK-CONST
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisions'
+          description: Array of the root Divisions for a Law
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getRootDivisions
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{path}:
+    get:
+      summary: Get Division by Jurisdiction and OpenLaws path
+      description: A precise way of retrieving one Division object with its unique path
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/lawKeyParam'
+      - name: path
+        description: An OpenLaws field that describes the Division's relationship to other documents in the law's hierarchy.
+          Combined with the law_key and effective_date_* fields this creates a unique key for Divisions.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: title_12.chapter_i.part_4.subpart_d.section_4_62
+      responses:
+        '200':
+          $ref: '#/components/responses/okSingleDivision'
+          description: Single Division matching the path
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: getDivsisionsByPath
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/updates:
+    get:
+      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a date.
+      description: This query returns a list of DivisionUpdate objects which are a lightweight subset of the Division. DivisionUpdates
+        contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note
+        that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo
+        from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc8288).
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/lawKeyParam'
+      - name: updated_after
+        description: Return list of Divisions updated AFTER this ISO Date (UTC). Date must be within 90 days of the current
+          date.
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2025-05-01'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 100
+          maximum: 500
+        description: Maximum number of results to return
+      - $ref: '#/components/parameters/pageParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisionUpdates'
+          description: An array of DivisionUpdates which contain law_keys, paths, and effective dates to identify which Divisions
+            have been created or changed.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getDivisionsUpdatedAfter
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{starting_path}/updates:
+    get:
+      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a date within a subtree of Divisions.
+      description: This query returns a list of DivisionUpdate objects within the Division hierarchy beginning at starting_path.
+        DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for
+        changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction
+        of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers
+        (https://datatracker.ietf.org/doc/html/rfc8288).
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/lawKeyParam'
+      - name: updated_after
+        description: Return list of Divisions updated AFTER this ISO Date (UTC). Date must be within 90 days of the current
+          date.
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2025-05-01'
+      - name: starting_path
+        description: The starting path to traverse down to find updated Divisions.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: title_12.chapter_i
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 100
+          maximum: 500
+        description: Maximum number of results to return
+      - $ref: '#/components/parameters/pageParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisionUpdates'
+          description: An array of DivisionUpdates which contain law_keys, paths, and effective dates to identify which Divisions
+            have been created or changed.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getDivisionsByPathUpdatedAfter
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/search:
+    get:
+      summary: Keyword Search within a Jurisdiction
+      description: Heuristic keyword search within a specific Jurisdiction (and optionally, federal Laws at the same time
+        with `with_federal`). The search scope will include statutes, rules, regulations, and constitutions. See "Keyword
+        Search Case Opinions" for case law search.
+      tags:
+      - Law Divisions
+      parameters:
+      - name: jurisdiction_key
+        in: path
+        required: true
+        schema:
+          type: string
+          example: CA
+        description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most
+          U.S. states and territories.
+      - $ref: '#/components/parameters/keywordQueryParam'
+      - $ref: '#/components/parameters/queryTypeParam'
+      - $ref: '#/components/parameters/withFederalParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisions'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: keywordSearchDivisionWithinJurisdiction
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/search:
+    get:
+      summary: Keyword Search within a Jurisdiction and a specific law_key for that Jurisdiction
+      description: 'Heuristic keyword search within a specific Jurisdiction and a specific type of law for that jurisdiction,
+        ex: Jurisdiction=TX and law_key=TX-CONST (constitution)'
+      tags:
+      - Law Divisions
+      parameters:
+      - name: jurisdiction_key
+        in: path
+        required: true
+        schema:
+          type: string
+          example: CA
+        description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most
+          U.S. states and territories.
+      - name: law_key
+        in: path
+        required: true
+        schema:
+          type: string
+          example: CA-RR
+        description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation
+          of a law type joined by a '-' character.
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          example: apple banana
+        description: One or more keywords to search by
+      - $ref: '#/components/parameters/queryTypeParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisions'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: keywordSearchDivisionWithinLaw
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/citations:
+    get:
+      summary: Lookup by Jurisdiction and Bluebook legal citation for a statute, regulation, or constitution
+      description: We highly recommend this method of looking up Divisions when legal citations are available because it is
+        the most precise way to identify relevant documents.
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 12 CFR § 1002.1
+        description: Bluebook legal citation for a statute, code, rule, regulation, or constitution
+      responses:
+        '200':
+          $ref: '#/components/responses/okSingleDivision'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          description: GET by citation for non-existent citation returns a 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: lookupByBluebookCitation
+  /api/v1/jurisdictions/{jurisdiction_key}/laws:
+    get:
+      summary: Get Laws by Jurisdiction
+      description: Jurisdictions, i.e., California, Texas, Federal, contain many laws, e.g.,  statutes, regulations, court
+        rules, and a constitution.
+      tags:
+      - Laws
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfLaws'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getLawsByJurisdiction
+  /api/v1/jurisdictions/{jurisdiction_key}/courts:
+    get:
+      summary: Get Courts by Jurisdiction
+      description: Lists all the active and inactive courts for a Jurisdiction. Note that federal bankruptcy courts are separate
+        from federal courts.
+      tags:
+      - Courts
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      responses:
+        '200':
+          description: List Courts by Jurisdiction
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Court'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getCourtsByJurisdiction
+  /api/v1/jurisdictions/{jurisdiction_key}/courts/{court_key}:
+    get:
+      summary: Get single Court
+      description: Returns a single court identified by the court_key. Court key is also the unique identifier in the CourtListener
+        data set.
+      tags:
+      - Courts
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/courtKeyParam'
+      responses:
+        '200':
+          description: Get one Court by courtKey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Court'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getCourt
+  /api/v1/jurisdictions/{jurisdiction_key}/opinions/search:
+    get:
+      summary: Keyword Search Case Opinions
+      description: BM25 keyword search of case opinion text.
+      tags:
+      - Opinions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          example: elections
+        description: One or more keywords to search by
+      - $ref: '#/components/parameters/queryTypeParam'
+      - $ref: '#/components/parameters/withFederalParam'
+      - name: filing_start_date
+        description: Filter opinions to those that were filed on or after this ISO date.
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/NullableDate'
+        examples:
+          start_date:
+            value: '2020-01-01'
+          no_start_date:
+            value: -Infinity
+      - name: filing_end_date
+        description: Filter opinions to those that were filed before or on this ISO date.
+        in: query
+        required: false
+        schema:
+          $ref: '#/components/schemas/NullableDate'
+        examples:
+          end_date:
+            value: '2020-12-31'
+          no_end_date:
+            value: Infinity
+      - name: court_keys
+        in: query
+        required: false
+        schema:
+          type: string
+          default: false
+          example: ca1,scotus
+        description: Comma delimited list of court_keys. See GET /jurisdictions/{jurisdiction_key}/courts for valid court_keys.
+          For the FED jurisdiction, 'first_circuit'...'eleventh_circuit', 'dc_circuit', and 'federal_circuit' are also valid
+          values which expand to all courts in that circuit.
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfOpinions'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: keywordSearchOpinions
+  /api/v1/jurisdictions/{jurisdiction_key}/opinions/citations:
+    get:
+      summary: Lookup Case Opinion by Jurisdiction and Bluebook legal citation for a case
+      description: Long form with parties or short form of case citations (volume-number reporter-abbreviation first-page-number)
+        will work.
+      tags:
+      - Opinions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 347 U.S. 483
+        description: Bluebook legal citation for a case
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfOpinions'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: lookupOpinionByBluebookCitation
+  /api/v1/laws:
+    get:
+      summary: Get all Laws
+      description: Laws in OpenLaws represent statutes, rules and regulations, and constitutions
+      tags:
+      - Laws
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfLaws'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+      operationId: getLaws
+components:
+  securitySchemes:
+    bearerAuth:
+      description: Authenticate API requests via a bearer token
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Jurisdiction:
+      type: object
+      description: Jurisdictions are the highest abstraction in OpenLaws. They contain codified Laws, Courts, Reporters. Federal
+        is a special case and contains several "sub-Jurisdictions" due to the government's scale and complexity.
+      properties:
+        name:
+          type: string
+          example: California
+        key:
+          type: string
+          description: Unique identifier for the jurisdiction. Often this is the same as postal_abbreviation (CA and TX) but
+            not always (FED, FED-BANKR, MIL, and TRIBAL.)
+          example: CA
+        state:
+          type: string
+          description: '(DEPRECATION WARNING: Use ''key'' instead. Will be deprecated in 1.1.0) Unique identifier for the
+            jurisdiction. Often this is the same as postal_abbreviation (CA and TX) but not always (FED)'
+          example: CA
+        abbreviation:
+          type: string
+          description: (FUTURE USE) Bluebook abbreviation for the Jurisdiction if applicable
+          example: Cal.
+        postal_abbreviation:
+          description: (FUTURE USE)
+          type: string
+          example: CA
+        laws:
+          type: array
+          items:
+            $ref: '#/components/schemas/Law'
+        courts:
+          description: (FUTURE USE)
+          type: array
+          items:
+            $ref: '#/components/schemas/Court'
+            example: []
+      required:
+      - key
+      - name
+      - laws
+    Law:
+      type: object
+      description: Laws represent one type of codified or administrative law for a specific Jurisdiction. Laws contain Divisions.
+        Please see the Court and Opinion schemas for case law.
+      properties:
+        key:
+          type: string
+          example: CA-RR
+          description: OpenLaws identifier for the Law.
+        jurisdiction_key:
+          type: string
+          example: CA
+          description: State or province when applicable.
+        state:
+          type: string
+          example: CA
+          description: (Deprecated. Use `jurisdiction` instead.) State or province when applicable.
+        law_type:
+          type: string
+          example: regulations
+          description: Type of Law, including statutes, rules, regulations, court rules, constitution, case law
+        name:
+          type: string
+          example: California Code of Regulations
+          description: Jurisdiction's name for the Law
+        aliases:
+          type:
+          - string
+          - 'null'
+          example: null
+        features:
+          type: array
+          items:
+            $ref: '#/components/schemas/LawFeature'
+          description: For future use.
+      required:
+      - key
+      - jurisdiction_key
+      - law_type
+    Court:
+      description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
+      type: object
+      properties:
+        key:
+          type: string
+          example: scotus
+          description: Unique identifier for the court
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for
+            most U.S. states and territories.
+        parent_court_key:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: Parent court key if applicable
+        name:
+          type: string
+          example: Supreme Court of the United States
+        short_name:
+          type: string
+          example: Supreme Court
+        abbreviation:
+          type: string
+          example: SCOTUS
+        start_date:
+          allOf:
+          - $ref: '#/components/schemas/NullableDate'
+          - example: '1789-09-24'
+        end_date:
+          allOf:
+          - $ref: '#/components/schemas/NullableDate'
+          - example: null
+    DivisionUpdate:
+      description: '**(Law Firm and Enterprise plans only)** Divisions are the primary building block in OpenLaws. Each Division
+        represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and
+        ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in
+        the source.'
+      type: object
+      properties:
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for
+            most U.S. states and territories.
+        law_key:
+          type: string
+          example: FED-CFR
+          description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation
+            of a law type.
+        path:
+          type: string
+          example: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+        label:
+          type: string
+          example: section_155_194
+          description: Human-readable identifier for the Division; guaranteed to be unique among its sibling Divisions
+        display_name:
+          type: string
+          example: 'Section 155.194: Catsup'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to
+            create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking
+            and Finance'''
+        openlaws_web_url:
+          type: string
+          example: https://static.openlaws.us/laws/fed/cfr/title_21/chapter_i/subchapter_b/part_155/subpart_b/section_155_194
+          description: Static web view provided by OpenLaws for display to customers and use as citations for LLM outputs.
+        effective_date_start:
+          $ref: '#/components/schemas/Date'
+          example: '1993-01-06'
+          description: If the source document and annotations contain a starting effective date, this field will be contain
+            an ISO 8601 date. This date is inclusive.
+        effective_date_end:
+          $ref: '#/components/schemas/Date'
+          example: Infinity
+          description: If the source document and annotations contain an ending effective date, this field will be contain
+            an ISO 8601 date. This date is inclusive.
+        is_repealed:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division is repealed, contingent repealed, or no longer effective.
+        current_as_of:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when the last time the Law was checked
+            for changes.'
+          example: '2025-03-01'
+        updated_at:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division''s source was updated.'
+          example: '1993-01-06'
+        deleted_on:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division was no longer found
+            in the source and removed from OpenLaws.'
+          example: '2024-12-31'
+      required:
+      - jurisdiction_key
+      - law_key
+      - path
+      - effective_date_start
+      - effective_date_end
+      - updated_at
+    Division:
+      description: Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot
+        in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives
+        to closely align with the source material including errors and omissions in the source.
+      type: object
+      properties:
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for
+            most U.S. states and territories.
+        law_key:
+          type: string
+          example: FED-CFR
+          description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation
+            of a law type.
+        label:
+          type: string
+          example: section_155_194
+          description: Human-readable identifier for the Division; guaranteed to be unique among its sibling Divisions
+        path:
+          type: string
+          example: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+        division_type:
+          type: string
+          example: section
+          description: OpenLaws standardization of the Division document type
+        identifier:
+          type:
+          - string
+          - 'null'
+          example: '155.194'
+          description: The source document's identifier
+        range_end_identifier:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: If the Division is part a range, this contains the ending value for the identifier range, e.g., §§
+            100 to 200 -> 200 is the range_end_identifier.
+        name:
+          type:
+          - string
+          - 'null'
+          example: Catsup
+          description: The name of the document from the source document.
+        display_name:
+          type: string
+          example: 'Section 155.194: Catsup'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to
+            create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking
+            and Finance'''
+        openlaws_web_url:
+          type: string
+          example: https://static.openlaws.us/laws/fed/cfr/title_21/chapter_i/subchapter_b/part_155/subpart_b/section_155_194
+          description: Static web view provided by OpenLaws for display to customers and use as citations for LLM outputs.
+        effective_date:
+          type: string
+          example: 1993-01-06...Infinity
+          description: '(DEPRECATION WARNING: This will be deprecated in favor of effective_date_start and effective_date_end.)
+            If the source document and annotations contain an effective date, this field will be contain the start and end
+            date as a range. Positive and negative infinity indicate the effective date is unbounded.'
+        effective_date_start:
+          allOf:
+          - $ref: '#/components/schemas/Date'
+          - example: '1993-01-06'
+            description: If the source document and annotations contain a starting effective date, this field will be contain
+              an ISO 8601 date. This date is inclusive.
+        effective_date_end:
+          allOf:
+          - $ref: '#/components/schemas/Date'
+          - example: Infinity
+            description: If the source document and annotations contain an ending effective date, this field will be contain
+              an ISO 8601 date. This date is inclusive.
+        aliases:
+          type:
+          - string
+          - 'null'
+          example: ''
+          description: Contains short or common names for the Division
+        plaintext_content:
+          type: string
+          example: "(a) Identity -\n\n    (1) Definition. Catsup, ketchup, or catchup is the food prepared from one or any\
+            \ combination of two or more of the following optional tomato ingredients:\n\n        (i) Tomato concentrate as\
+            \ defined in § 155.191(a)(1), except that lemon juice, concentrated lemon juice, or safe and suitable organic\
+            \ acids may be used in quantities no greater than necessary to adjust the pH, and in compliance with § 155.191(b).\n\
+            \n        (ii) The liquid derived from mature tomatoes of the red or reddish varieties Lycopersicum esculentum\
+            \ P. Mill.\n\n        (iii) The liquid obtained from the residue from preparing such tomatoes for canning, consisting\
+            \ of peelings and cores with or without such tomatoes or pieces thereof.\n\n        (iv) The liquid obtained from\
+            \ the residue from partial extraction of juice from such tomatoes.\n    Such liquid is strained so as to exclude\
+            \ skins, seeds, and other coarse or hard substances in accordance with current good manufacturing practice. Prior\
+            \ to straining, food-grade hydrochloric acid may be added to the tomato material in an amount to obtain a pH no\
+            \ lower than 2.0. Such acid is then neutralized with food-grade sodium hydroxide so that the treated tomato material\
+            \ is restored to a pH of 4.2±0.2. The final composition of the food may be adjusted by concentration and/or by\
+            \ the addition of water. The food may contain salt (sodium chloride formed during acid neutralization shall be\
+            \ considered added salt) and is seasoned with ingredients as specified in paragraph (a)(2) of this section. The\
+            \ food is preserved by heat sterilization (canning), refrigeration, or freezing. When sealed in a container to\
+            \ be held at ambient temperatures, it is so processed by heat, before or after sealing, as to prevent spoilage.\n\
+            \n    (2) Ingredients. One or any combination of two or more of the following safe and suitable ingredients in\
+            \ each of the following categories is added to the tomato ingredients specified in paragraph (a)(1) of this section:\n\
+            \n        (i) Vinegars.\n\n        (ii) Nutritive carbohydrate sweeteners. Such sweeteners if defined in part\
+            \ 168 of this chapter shall be as defined therein.\n\n        (iii) Spices, flavoring, onions, or garlic.\n\n\
+            \    (3) Labeling.\n\n        (i) The name of the food is “Catsup,” “Ketchup,” or “Catchup.”\n\n        (ii) The\
+            \ following shall be included as part of the name or in close proximity to the name of the food:\n    (*a*) The\
+            \ statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from canning” if\
+            \ the optional tomato ingredient specified in paragraph (a)(1)(iii) of this section or tomato concentrate containing\
+            \ the ingredient specified in § 155.191(a)(1)(ii) is present.\n\n    (*b*) The statement “Made from” or “Made\
+            \ in part from,” as the case may be, “residual tomato material from partial extraction of juice” if the optional\
+            \ tomato ingredient specified in paragraph (a)(1)(iv) of this section or tomato concentrate containing the ingredient\
+            \ specified in § 155.191(a)(1)(iii) is present.\n\n        (iii) Label declaration. Each of the ingredients used\
+            \ in the food shall be declared on the label as required by the applicable sections of parts 101 and 130 of this\
+            \ chapter; except that the name “tomato concentrate” may be used in lieu of the names “tomato puree,” “tomato\
+            \ pulp,” or “tomato paste” and when tomato concentrates are used, the labeling requirements of § 155.191(a)(3)(ii)(a)\
+            \ and (a)(3)(ii)(b) do not apply.\n\n(b) Quality.\n\n    (1) The standard of quality for catsup is as follows:\
+            \ The consistency of the finished food is such that its flow is not more than 14 centimeters in 30 seconds at\
+            \ 20 °C when tested in a Bostwick Consistometer in the following manner: Check temperature of mixture and adjust\
+            \ to 20±1 °C. The trough must also be at a temperature close to 20 °C. Adjust end-to-end level of Bostwick Consistometer\
+            \ by means of the spirit level placed in trough of instrument. Side-to-side level may be adjusted by means of\
+            \ the built-in spirit level. Transfer sample to the dry sample chamber of the Bostwick Consistometer. Fill the\
+            \ chamber slightly more than level full, avoiding air bubbles as far as possible. Pass a straight edge across\
+            \ top of chamber starting from the gate end to remove excess product. Release gate of instrument by gradual pressure\
+            \ on lever, holding the instrument down at the same time to prevent its movement as the gate is released. Immediately\
+            \ start the stop watch or interval timer, and after 30 seconds read the maximum distance of flow to the nearest\
+            \ 0.1 centimeter. Clean and dry the instrument and repeat the reading on another portion of sample. Do not wash\
+            \ instrument with hot water if it is to be used immediately for the next determination, as this may result in\
+            \ an increase in temperature of the sample. For highest accuracy, the instrument should be maintained at a temperature\
+            \ of 20±1 °C. If readings vary more than 0.2 centimeter, repeat a third time or until satisfactory agreement is\
+            \ obtained. Report the average of two or more readings, excluding any that appear to be abnormal.\n\n    (2) Determine\
+            \ compliance as specified in § 155.3(b).\n\n    (3) If the quality of catsup falls below the standard prescribed\
+            \ in paragraphs (b) (1) and (2) of this section, the label shall bear the general statement of substandard quality\
+            \ specified in § 130.14(a) of this chapter, in the manner and form therein specified, but in lieu of such general\
+            \ statement of substandard quality when the quality of the catsup falls below the standard, the label may bear\
+            \ the alternative statement, “Below Standard in Quality-Low Consistency.”\n\n(c) Fill of container.\n\n    (1)\
+            \ The standard of fill of container for catsup, as determined by the general method for fill of container prescribed\
+            \ in § 130.12(b) of this chapter, is not less than 90 percent of the total capacity except:\n\n        (i) When\
+            \ the food is frozen, or\n\n        (ii) When the food is packaged in individual serving-size packages containing\
+            \ 56.7 grams (2 ounces) or less.\n\n    (2) Determine compliance as specified in § 155.3(b).\n\n    (3) If the\
+            \ catsup falls below the standard of fill prescribed in paragraphs (c) (1) and (2) of this section, the label\
+            \ shall bear the general statement of substandard fill as specified in § 130.14(b) of this chapter, in the manner\
+            \ and form therein specified."
+          description: Plaintext content without rich text formatting and markup to define pincite locations. Suitable for
+            use with LLMs.
+        markdown_content:
+          type: string
+          example: "1.  {{< pincite identifier=\"a\" display=\"a\" >}} *Identity* -\n    1.  {{< pincite identifier=\"a_1\"\
+            \ display=\"1\" >}} *Definition.*  Catsup, ketchup, or catchup is the food prepared from one or any combination\
+            \ of two or more of the following optional tomato ingredients:\n        1.  {{< pincite identifier=\"a_1_i\" display=\"\
+            i\" >}} Tomato concentrate as defined in § 155.191(a)(1), except that lemon juice, concentrated lemon juice, or\
+            \ safe and suitable organic acids may be used in quantities no greater than necessary to adjust the pH, and in\
+            \ compliance with § 155.191(b).\n        1.  {{< pincite identifier=\"a_1_ii\" display=\"ii\" >}} The liquid derived\
+            \ from mature tomatoes of the red or reddish varieties *Lycopersicum esculentum* P. Mill.\n        1.  {{< pincite\
+            \ identifier=\"a_1_iii\" display=\"iii\" >}} The liquid obtained from the residue from preparing such tomatoes\
+            \ for canning, consisting of peelings and cores with or without such tomatoes or pieces thereof.\n        1. \
+            \ {{< pincite identifier=\"a_1_iv\" display=\"iv\" >}} The liquid obtained from the residue from partial extraction\
+            \ of juice from such tomatoes.\n\n            Such liquid is strained so as to exclude skins, seeds, and other\
+            \ coarse or hard substances in accordance with current good manufacturing practice. Prior to straining, food-grade\
+            \ hydrochloric acid may be added to the tomato material in an amount to obtain a pH no lower than 2.0. Such acid\
+            \ is then neutralized with food-grade sodium hydroxide so that the treated tomato material is restored to a pH\
+            \ of 4.2±0.2. The final composition of the food may be adjusted by concentration and/or by the addition of water.\
+            \ The food may contain salt (sodium chloride formed during acid neutralization shall be considered added salt)\
+            \ and is seasoned with ingredients as specified in paragraph (a)(2) of this section. The food is preserved by\
+            \ heat sterilization (canning), refrigeration, or freezing. When sealed in a container to be held at ambient temperatures,\
+            \ it is so processed by heat, before or after sealing, as to prevent spoilage. \n        { .parens-lower-roman\
+            \ }\n    1.  {{< pincite identifier=\"a_2\" display=\"2\" >}} *Ingredients.*  One or any combination of two or\
+            \ more of the following safe and suitable ingredients in each of the following categories is added to the tomato\
+            \ ingredients specified in paragraph (a)(1) of this section:\n        1.  {{< pincite identifier=\"a_2_i\" display=\"\
+            i\" >}} Vinegars.\n        1.  {{< pincite identifier=\"a_2_ii\" display=\"ii\" >}} Nutritive carbohydrate sweeteners.\
+            \ Such sweeteners if defined in part 168 of this chapter shall be as defined therein.\n        1.  {{< pincite\
+            \ identifier=\"a_2_iii\" display=\"iii\" >}} Spices, flavoring, onions, or garlic.\n        { .parens-lower-roman\
+            \ }\n    1.  {{< pincite identifier=\"a_3\" display=\"3\" >}} *Labeling.*\n        1.  {{< pincite identifier=\"\
+            a_3_i\" display=\"i\" >}} The name of the food is “Catsup,” “Ketchup,” or “Catchup.”\n        1.  {{< pincite\
+            \ identifier=\"a_3_ii\" display=\"ii\" >}} The following shall be included as part of the name or in close proximity\
+            \ to the name of the food:\n\n\n            (*a*) The statement “Made from” or “Made in part from,” as the case\
+            \ may be, “residual tomato material from canning” if the optional tomato ingredient specified in paragraph (a)(1)(iii)\
+            \ of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(ii) is present.\n\
+            \n\n\n            (*b*) The statement “Made from” or “Made in part from,” as the case may be, “residual tomato\
+            \ material from partial extraction of juice” if the optional tomato ingredient specified in paragraph (a)(1)(iv)\
+            \ of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(iii) is present.\n\
+            \        1.  {{< pincite identifier=\"a_3_iii\" display=\"iii\" >}} *Label declaration.*  Each of the ingredients\
+            \ used in the food shall be declared on the label as required by the applicable sections of parts 101 and 130\
+            \ of this chapter; except that the name “tomato concentrate” may be used in lieu of the names “tomato puree,”\
+            \ “tomato pulp,” or “tomato paste” and when tomato concentrates are used, the labeling requirements of § 155.191(a)(3)(ii)(*a*)\
+            \ and (a)(3)(ii)(*b*) do not apply.\n        { .parens-lower-roman }\n    { .parens-decimal }\n1.  {{< pincite\
+            \ identifier=\"b\" display=\"b\" >}} *Quality.*\n    1.  {{< pincite identifier=\"b_1\" display=\"1\" >}} The\
+            \ standard of quality for catsup is as follows: The consistency of the finished food is such that its flow is\
+            \ not more than 14 centimeters in 30 seconds at 20 °C when tested in a Bostwick Consistometer in the following\
+            \ manner: Check temperature of mixture and adjust to 20±1 °C. The trough must also be at a temperature close to\
+            \ 20 °C. Adjust end-to-end level of Bostwick Consistometer by means of the spirit level placed in trough of instrument.\
+            \ Side-to-side level may be adjusted by means of the built-in spirit level. Transfer sample to the dry sample\
+            \ chamber of the Bostwick Consistometer. Fill the chamber slightly more than level full, avoiding air bubbles\
+            \ as far as possible. Pass a straight edge across top of chamber starting from the gate end to remove excess product.\
+            \ Release gate of instrument by gradual pressure on lever, holding the instrument down at the same time to prevent\
+            \ its movement as the gate is released. Immediately start the stop watch or interval timer, and after 30 seconds\
+            \ read the maximum distance of flow to the nearest 0.1 centimeter. Clean and dry the instrument and repeat the\
+            \ reading on another portion of sample. Do not wash instrument with hot water if it is to be used immediately\
+            \ for the next determination, as this may result in an increase in temperature of the sample. For highest accuracy,\
+            \ the instrument should be maintained at a temperature of 20±1 °C. If readings vary more than 0.2 centimeter,\
+            \ repeat a third time or until satisfactory agreement is obtained. Report the average of two or more readings,\
+            \ excluding any that appear to be abnormal.\n    1.  {{< pincite identifier=\"b_2\" display=\"2\" >}} Determine\
+            \ compliance as specified in § 155.3(b).\n    1.  {{< pincite identifier=\"b_3\" display=\"3\" >}} If the quality\
+            \ of catsup falls below the standard prescribed in paragraphs (b) (1) and (2) of this section, the label shall\
+            \ bear the general statement of substandard quality specified in § 130.14(a) of this chapter, in the manner and\
+            \ form therein specified, but in lieu of such general statement of substandard quality when the quality of the\
+            \ catsup falls below the standard, the label may bear the alternative statement, “Below Standard in Quality-Low\
+            \ Consistency.”\n    { .parens-decimal }\n1.  {{< pincite identifier=\"c\" display=\"c\" >}} *Fill of container.*\n\
+            \    1.  {{< pincite identifier=\"c_1\" display=\"1\" >}} The standard of fill of container for catsup, as determined\
+            \ by the general method for fill of container prescribed in § 130.12(b) of this chapter, is not less than 90 percent\
+            \ of the total capacity except:\n        1.  {{< pincite identifier=\"c_1_i\" display=\"i\" >}} When the food\
+            \ is frozen, or\n        1.  {{< pincite identifier=\"c_1_ii\" display=\"ii\" >}} When the food is packaged in\
+            \ individual serving-size packages containing 56.7 grams (2 ounces) or less.\n        { .parens-lower-roman }\n\
+            \    1.  {{< pincite identifier=\"c_2\" display=\"2\" >}} Determine compliance as specified in § 155.3(b).\n \
+            \   1.  {{< pincite identifier=\"c_3\" display=\"3\" >}} If the catsup falls below the standard of fill prescribed\
+            \ in paragraphs (c) (1) and (2) of this section, the label shall bear the general statement of substandard fill\
+            \ as specified in § 130.14(b) of this chapter, in the manner and form therein specified.\n    { .parens-decimal\
+            \ }\n{ .parens-lower-alpha }"
+          description: Rich text content in Commonmark with CSS annotations. Meant to be rendered into human-readable HTML
+            along with the OpenLaws Markdown stylesheet.
+        html_content:
+          type: string
+          example: '<ol class="parens-lower-alpha">
+
+            <li><span class=''pincite-display''>a</span> Identity—(1) Definition. Catsup, ketchup, or catchup is the food
+            prepared from one or any combination of two or more of the following optional tomato ingredients:
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> Tomato concentrate as defined in § 155.191(a)(1), except that lemon
+            juice, concentrated lemon juice, or safe and suitable organic acids may be used in quantities no greater than
+            necessary to adjust the pH, and in compliance with § 155.191(b).</li>
+
+            <li><span class=''pincite-display''>ii</span> The liquid derived from mature tomatoes of the red or reddish varieties
+            Lycopersicum esculentum P. Mill.</li>
+
+            <li><span class=''pincite-display''>iii</span> The liquid obtained from the residue from preparing such tomatoes
+            for canning, consisting of peelings and cores with or without such tomatoes or pieces thereof.</li>
+
+            <li><span class=''pincite-display''>iv</span> The liquid obtained from the residue from partial extraction of
+            juice from such tomatoes.</li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            <p>Such liquid is strained so as to exclude skins, seeds, and other coarse or hard substances in accordance with
+            current good manufacturing practice. Prior to straining, food-grade hydrochloric acid may be added to the tomato
+            material in an amount to obtain a pH no lower than 2.0. Such acid is then neutralized with food-grade sodium hydroxide
+            so that the treated tomato material is restored to a pH of 4.2±0.2. The final composition of the food may be adjusted
+            by concentration and/or by the addition of water. The food may contain salt (sodium chloride formed during acid
+            neutralization shall be considered added salt) and is seasoned with ingredients as specified in paragraph (a)(2)
+            of this section. The food is preserved by heat sterilization (canning), refrigeration, or freezing. When sealed
+            in a container to be held at ambient temperatures, it is so processed by heat, before or after sealing, as to
+            prevent spoilage.</p>
+
+            <ol class="parens-decimal">
+
+            <li><span class=''pincite-display''>2</span> Ingredients. One or any combination of two or more of the following
+            safe and suitable ingredients in each of the following categories is added to the tomato ingredients specified
+            in paragraph (a)(1) of this section:
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> Vinegars.</li>
+
+            <li><span class=''pincite-display''>ii</span> Nutritive carbohydrate sweeteners. Such sweeteners if defined in
+            part 168 of this chapter shall be as defined therein.</li>
+
+            <li><span class=''pincite-display''>iii</span> Spices, flavoring, onions, or garlic.</li>
+
+            </ol>
+
+            </li>
+
+            <li><span class=''pincite-display''>3</span> Labeling.
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> The name of the food is “Catsup,” “Ketchup,” or “Catchup.”</li>
+
+            <li><span class=''pincite-display''>ii</span> The following shall be included as part of the name or in close
+            proximity to the name of the food:
+
+            <ol class="parens-lower-alpha">
+
+            <li><span class=''pincite-display''>a</span> The statement “Made from” or “Made in part from,” as the case may
+            be, “residual tomato material from canning” if the optional tomato ingredient specified in paragraph (a)(1)(iii)
+            of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(ii) is present.</li>
+
+            <li><span class=''pincite-display''>b</span> The statement “Made from” or “Made in part from,” as the case may
+            be, “residual tomato material from partial extraction of juice” if the optional tomato ingredient specified in
+            paragraph (a)(1)(iv) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(iii)
+            is present.</li>
+
+            </ol>
+
+            </li>
+
+            <li><span class=''pincite-display''>iii</span> Label declaration. Each of the ingredients used in the food shall
+            be declared on the label as required by the applicable sections of parts 101 and 130 of this chapter; except that
+            the name “tomato concentrate” may be used in lieu of the names “tomato puree,” “tomato pulp,” or “tomato paste”
+            and when tomato concentrates are used, the labeling requirements of § 155.191
+
+            <ol class="parens-lower-alpha">
+
+            <li><span class=''pincite-display''>a</span> (3)(ii)(a) and (a)(3)(ii)(b) do not apply.</li>
+
+            <li><span class=''pincite-display''>b</span> Quality.
+
+            <ol class="parens-decimal">
+
+            <li><span class=''pincite-display''>1</span> The standard of quality for catsup is as follows: The consistency
+            of the finished food is such that its flow is not more than 14 centimeters in 30 seconds at 20 °C when tested
+            in a Bostwick Consistometer in the following manner: Check temperature of mixture and adjust to 20±1 °C. The trough
+            must also be at a temperature close to 20 °C. Adjust end-to-end level of Bostwick Consistometer by means of the
+            spirit level placed in trough of instrument. Side-to-side level may be adjusted by means of the built-in spirit
+            level. Transfer sample to the dry sample chamber of the Bostwick Consistometer. Fill the chamber slightly more
+            than level full, avoiding air bubbles as far as possible. Pass a straight edge across top of chamber starting
+            from the gate end to remove excess product. Release gate of instrument by gradual pressure on lever, holding the
+            instrument down at the same time to prevent its movement as the gate is released. Immediately start the stop watch
+            or interval timer, and after 30 seconds read the maximum distance of flow to the nearest 0.1 centimeter. Clean
+            and dry the instrument and repeat the reading on another portion of sample. Do not wash instrument with hot water
+            if it is to be used immediately for the next determination, as this may result in an increase in temperature of
+            the sample. For highest accuracy, the instrument should be maintained at a temperature of 20±1 °C. If readings
+            vary more than 0.2 centimeter, repeat a third time or until satisfactory agreement is obtained. Report the average
+            of two or more readings, excluding any that appear to be abnormal.</li>
+
+            <li><span class=''pincite-display''>2</span> Determine compliance as specified in § 155.3(b).</li>
+
+            <li><span class=''pincite-display''>3</span> If the quality of catsup falls below the standard prescribed in paragraphs
+            (b) (1) and (2) of this section, the label shall bear the general statement of substandard quality specified in
+            § 130.14(a) of this chapter, in the manner and form therein specified, but in lieu of such general statement of
+            substandard quality when the quality of the catsup falls below the standard, the label may bear the alternative
+            statement, “Below Standard in Quality—Low Consistency.”</li>
+
+            </ol>
+
+            </li>
+
+            <li><span class=''pincite-display''>c</span> Fill of container. (1) The standard of fill of container for catsup,
+            as determined by the general method for fill of container prescribed in § 130.12(b) of this chapter, is not less
+            than 90 percent of the total capacity except:
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> When the food is frozen, or</li>
+
+            <li><span class=''pincite-display''>ii</span> When the food is packaged in individual serving-size packages containing
+            56.7 grams (2 ounces) or less.
+
+            <ol class="parens-decimal">
+
+            <li><span class=''pincite-display''>2</span> Determine compliance as specified in § 155.3(b).</li>
+
+            <li><span class=''pincite-display''>3</span> If the catsup falls below the standard of fill prescribed in paragraphs
+            (c) (1) and (2) of this section, the label shall bear the general statement of substandard fill as specified in
+            § 130.14(b) of this chapter, in the manner and form therein specified.</li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            </li>
+
+            </ol>'
+          description: '**(Law Firm and Enterprise plans only)** Rich text content rendered from the Markdown to HTML with
+            TailwindCSS styling and OpenLaws'' Markdown stylesheet.'
+        annotations:
+          type:
+          - string
+          - 'null'
+          example: '[48 FR 3956, Jan. 28, 1983, as amended at 49 FR 15073, Apr. 17, 1984; 58 FR 2883, Jan. 6, 1993]'
+          description: Annotations and interpretations if available from the official source.
+        display_ancestors:
+          type: array
+          items:
+            $ref: '#/components/schemas/DivisionDisplay'
+          example:
+          - display_name: 'Title 21: Food and Drugs'
+            path: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          - display_name: 'Chapter I: Food and Drug Administration, Department of Health and Human Services'
+            path: title_21.chapter_i
+          - display_name: 'Subchapter B: Food for Human Consumption'
+            path: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          - display_name: 'Part 155: Canned Vegetables'
+            path: title_21.chapter_i.subchapter_b.part_155
+          - display_name: 'Subpart B: Requirements for Specific Standardized Canned Vegetables'
+            path: title_21.chapter_i.subchapter_b.part_155.subpart_b
+          description: '**(Law Firm and Enterprise plans only)** Array of ancestors Divisions with display_name and paths.
+            This can be used to render navigation breadcrumbs or to give LLMs context for the current Division.'
+        display_children:
+          type: array
+          items:
+            $ref: '#/components/schemas/DivisionDisplay'
+          example: []
+          description: '**(Law Firm and Enterprise plans only)** Array of children Divisions with display_name and paths.
+            This can be used to render a list of child Divisions for the current Division.'
+        source_url:
+          type: string
+          example: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-155/subpart-B/section-155.194
+          description: '**(Law Firm and Enterprise plans only)** Authoritative Source URL for law. Deep-links to the source
+            where supported.'
+        current_as_of:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when the last time the Law was checked
+            for changes.'
+          example: '2025-03-01'
+        updated_at:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division''s source was updated.'
+          example: '1993-01-06'
+        is_repealed:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division is repealed, contingent repealed, or no longer effective.
+        is_reserved:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division identifier and range_end_identifier are reserved by the Jurisdiction.
+        renumbered:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: (Experimental) Contains the new identifier and location where the Division was renumbered to.
+      required:
+      - jurisdiction_key
+      - law_key
+      - label
+      - path
+      - division_type
+      - identifier
+      - range_end_identifier
+      - name
+      - display_name
+      - effective_date_start
+      - effective_date_end
+      - plaintext_content
+      - markdown_content
+      - annotations
+      - display_ancestors
+      - display_children
+      - is_repealed
+      - renumbered
+    DivisionDisplay:
+      description: Minimal subset of Division properties. Useful for building lists and drill downs of Division hierarchies.
+      type: object
+      properties:
+        display_name:
+          type: string
+          example: 'Title 1: Government'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to
+            create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking
+            and Finance'''
+        path:
+          type: string
+          example: title_1
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+      required:
+      - display_name
+      - path
+    Opinion:
+      description: Court opinions that resembles the CourtListener schema but is modeled to be focused on the Opinion as the
+        central concept.
+      type: object
+      properties:
+        case_name:
+          type: string
+          example: Brown v. Board of Education
+          description: Full case name including first and second parties
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for
+            most U.S. states and territories.
+        court:
+          description: Court
+          $ref: '#/components/schemas/Court'
+        docket_number:
+          type: string
+          example: NO. 1
+          description: Court docket identifier for the opinion
+        date_filed:
+          type: string
+          format: date
+          example: '1954-05-17'
+          description: Date which the opinion was filed (ISO formatted date)
+        judges:
+          type: string
+          example: Warren
+          description: Name of judges if available
+        attorneys:
+          type: string
+          example: Robert L. Carter argued the cause for appellants in No. 1 on the original argument and on the reargument.
+            Thurgood Marshall argued the cause for appellants in No. 2 on the original argument and Spottswood W. Robinson,
+            III, for appellants in No. 4 on the original argument, and both argued the causes for appellants in Nos. 2 and
+            4 on the reargument. Louis L. Redding and Jack Green-berg argued the cause for respondents in No. 10 on the original
+            argument and Jack Greenberg and Thurgood Marshall on the reargument., On the briefs were Robert L. Carter, Thurgood
+            Marshall, Spottswood W. Robinson, III, Louis L. Redding, Jack Greenberg, George E. C. Hayes, William R. Ming,
+            Jr., Constance Baker Motley, James M. Nabrit, Jr., Charles S. Scott, Frank D. Reeves, Harold R. Boulware and Oliver
+            W. Hill for appellants in Nos. 1, 2 and 4 and respondents in No. 10; George M. Johnson for appellants in Nos.
+            1, 2 and 4; and Loren Miller for appellants in Nos. 2 and 4. Arthur D. Shores and A. T. Walden were on the Statement
+            as to Jurisdiction and a brief opposing a Motion to Dismiss or Affirm in No. 2., Paul E. Wilson, Assistant Attorney
+            General of Kansas, argued the cause for appellees in No. 1 on the original argument and on the reargument. With
+            him on the briefs was Harold R. Fatzer, Attorney General., John W. Davis argued the cause for appellees in No.
+            2 on the original argument and for appellees in Nos. 2 and 4 on the reargument. With him on the briefs in No.
+            2 were T. C. Callison, Attorney General of South Carolina, Robert McC. Figg, Jr., S. E. Rogers, William R. Meagher
+            and Taggart Whipple., J. Lindsay Almond, Jr., Attorney General of Virginia, and T. Justin Moore argued the cause
+            for appellees in No. 4 on the original argument and for appellees in Nos. 2 and 4 on the reargument. On the briefs
+            in No. 4 were J. Lindsay Almond, Jr., Attorney General, and Henry T. Wickham, Special Assistant Attorney General,
+            for the State of Virginia, and T. Justin Moore, Archibald O. Robertson, John W. Riely and T. Justin Moore, Jr.
+            for the Prince Edward County School Authorities, appellees., H. Albert Young, Attorney General of Delaware, argued
+            the cause for petitioners in No. 10 on the original argument and on the reargument. With him on the briefs was
+            Louis J. Finger, Special Deputy Attorney General., By special leave of Court, Assistant Attorney General Rankin
+            argued the cause for the United States on the reargument, as amicus curiae, urging reversal in Nos. 1, 2 and 4
+            and affirmance in No. 10. With him on the brief were Attorney General Brownell, Philip Elman, Leon Ulman, William
+            J. Lamont and M. Magdelena Schoch. James P. McGranery, then Attorney General, and Philip Elman filed a brief for
+            the United States on the original argument, as amicus curiae, urging reversal in Nos. 1, 2 and 4 and affirmance
+            in No. 10., Briefs of amici curiae supporting appellants in No. 1 were filed by Shad Polier, Will Maslow and Joseph
+            B. Robison for the American Jewish Congress; by Edwin J. Lukas, Arnold Forster, Arthur Garfield Hays, Frank E.
+            Karelsen, Leonard Haas, Saburo Kido and Theodore Leskes for the American Civil Liberties Union et al.; and by
+            John Ligtenberg and Selma M. Borchardt for the American Federation of Teachers. Briefs of amici curiae supporting
+            appellants in No. 1 and respondents in No. 10 were filed by Arthur J. Goldberg and Thomas E. Harris for the Congress
+            of Industrial Organizations and by Phineas Indritz for the American Veterans Committee, Inc.
+          description: Name of attorneys if available
+        first_party:
+          type: string
+          example: Brown
+        second_party:
+          type: string
+          example: Board of Education
+        precedential_status:
+          type: string
+          example: Published
+          description: Published or unpublished
+        headmatter:
+          type: string
+          example: '## Parties
+
+            BROWN et al.
+
+            <em>
+
+            v.
+
+            </em>
+
+            BOARD OF EDUCATION OF TOPEKA et al.
+
+
+            ## Docket Number
+
+            NO. 1.
+
+
+            ## Other Date
+
+            Argued December 9, 1952.
+
+
+            ## Other Date
+
+            Reargued December 8, 1953.
+
+
+            ## Decision Date
+
+            Decided May 17, 1954.
+
+
+            ## Attorneys
+
+            <em>
+
+            Robert L. Carter
+
+            </em>
+
+            argued the cause for appellants in No. 1 on the original argument and on the reargument.
+
+            <em>
+
+            Thurgood Marshall
+
+            </em>
+
+            argued the cause for appellants in No. 2 on the original argument and
+
+            <em>
+
+            Spottswood W. Robinson, III,
+
+            </em>
+
+            for appellants in No. 4 on the original argument, and both argued the causes for appellants in Nos. 2 and 4 on
+            the reargument.
+
+            <em>
+
+            Louis L. Redding
+
+            </em>
+
+            and
+
+            <em>
+
+            Jack Green-berg
+
+            </em>
+
+            argued the cause for respondents in No. 10 on the original argument and
+
+            <em>
+
+            Jack Greenberg
+
+            </em>
+
+            and
+
+            <em>
+
+            Thurgood Marshall
+
+            </em>
+
+            on the reargument.
+
+
+            ## Attorneys
+
+            On the briefs were
+
+            <em>
+
+            Robert L. Carter, Thurgood Marshall, Spottswood W. Robinson, III, Louis L. Redding, Jack Greenberg, George E.
+            C. Hayes, William R. Ming, Jr., Constance Baker Motley, James M. Nabrit, Jr., Charles S. Scott, Frank D. Reeves,
+            Harold R. Boulware
+
+            </em>
+
+            and
+
+            <em>
+
+            Oliver W. Hill
+
+            </em>
+
+            for appellants in Nos. 1, 2 and 4 and respondents in No. 10;
+
+            <em>
+
+            George M. Johnson
+
+            </em>
+
+            for appellants in Nos. 1, 2 and 4; and
+
+            <em>
+
+            Loren Miller
+
+            </em>
+
+            for appellants in Nos. 2 and 4.
+
+            <em>
+
+            Arthur D. Shores
+
+            </em>
+
+            and
+
+            <em>
+
+            A. T. Walden
+
+            </em>
+
+            were on the Statement as to Jurisdiction and a brief opposing a Motion to Dismiss or Affirm in No. 2.
+
+
+            ## Attorneys
+
+            <em>
+
+            Paul E. Wilson,
+
+            </em>
+
+            Assistant Attorney General of Kansas, argued the cause for appellees in No. 1 on the original argument and on
+            the reargument. With him on the briefs was
+
+            <em>
+
+            Harold R. Fatzer,
+
+            </em>
+
+            Attorney General.
+
+
+            ## Attorneys
+
+            <em>
+
+            John W. Davis
+
+            </em>
+
+            argued the cause for appellees in No. 2 on the original argument and for appellees in Nos. 2 and 4 on the reargument.
+            With him on the briefs in No. 2 were
+
+            <em>
+
+            T. C. Callison,
+
+            </em>
+
+            Attorney General of South Carolina,
+
+            <em>
+
+            Robert McC. Figg, Jr., S. E. Rogers, William R. Meagher
+
+            </em>
+
+            and
+
+            <em>
+
+            Taggart Whipple.
+
+            </em>
+
+
+            ## Attorneys
+
+            <em>
+
+            J. Lindsay Almond, Jr.,
+
+            </em>
+
+            Attorney General of Virginia, and
+
+            <em>
+
+            T. Justin Moore
+
+            </em>
+
+            argued the cause for appellees in No. 4 on the original argument and for appellees in Nos. 2 and 4 on the reargument.
+            On the briefs in No. 4 were
+
+            <em>
+
+            J. Lindsay Almond, Jr.,
+
+            </em>
+
+            Attorney General, and
+
+            <em>
+
+            Henry T. Wickham,
+
+            </em>
+
+            Special Assistant Attorney General, for the State of Virginia, and
+
+            <em>
+
+            T. Justin Moore, Archibald O. Robertson, John W. Riely
+
+            </em>
+
+            and
+
+            <em>
+
+            T. Justin Moore, Jr.
+
+            </em>
+
+            for the Prince Edward County School Authorities, appellees.
+
+
+            ## Attorneys
+
+            <em>
+
+            H. Albert Young,
+
+            </em>
+
+            Attorney General of Delaware, argued the cause for petitioners in No. 10 on the original argument and on the reargument.
+            With him on the briefs was
+
+            <em>
+
+            Louis J. Finger,
+
+            </em>
+
+            Special Deputy Attorney General.
+
+
+            ## Attorneys
+
+            By special leave of Court,
+
+            <em>
+
+            Assistant Attorney General Rankin
+
+            </em>
+
+            argued the cause for the United States on the reargument, as
+
+            <em>
+
+            amicus curiae,
+
+            </em>
+
+            urging reversal in Nos. 1, 2 and 4 and affirmance in No. 10. With him on the brief were
+
+            <em>
+
+            Attorney General Brownell, Philip Elman, Leon Ulman, William J. Lamont
+
+            </em>
+
+            and
+
+            <em>
+
+            M. Magdelena Schoch. James P. McGranery,
+
+            </em>
+
+            then Attorney General, and
+
+            <em>
+
+            Philip Elman
+
+            </em>
+
+            filed a brief for the United States on the original argument, as
+
+            <em>
+
+            amicus curiae,
+
+            </em>
+
+            urging reversal in Nos. 1, 2 and 4 and affirmance in No. 10.
+
+
+            ## Attorneys
+
+            Briefs of
+
+            <em>
+
+            amici curiae
+
+            </em>
+
+            supporting appellants in No. 1 were filed by
+
+            <em>
+
+            Shad Polier, Will Maslow
+
+            </em>
+
+            and
+
+            <em>
+
+            Joseph B. Robison
+
+            </em>
+
+            for the American Jewish Congress; by
+
+            <em>
+
+            Edwin J. Lukas, Arnold Forster, Arthur Garfield Hays, Frank E. Karelsen, Leonard Haas, Saburo Kido
+
+            </em>
+
+            and
+
+            <em>
+
+            Theodore Leskes
+
+            </em>
+
+            for the American Civil Liberties Union et al.; and by
+
+            <em>
+
+            John Ligtenberg
+
+            </em>
+
+            and
+
+            <em>
+
+            Selma M. Borchardt
+
+            </em>
+
+            for the American Federation of Teachers. Briefs of
+
+            <em>
+
+            amici curiae
+
+            </em>
+
+            supporting appellants in No. 1 and respondents in No. 10 were filed by
+
+            <em>
+
+            Arthur J. Goldberg
+
+            </em>
+
+            and
+
+            <em>
+
+            Thomas E. Harris
+
+            </em>
+
+            for the Congress of Industrial Organizations and by
+
+            <em>
+
+            Phineas Indritz
+
+            </em>
+
+            for the American Veterans Committee, Inc.'
+          description: Markdown of headmatter if available
+        extracted_by_ocr:
+          type: boolean
+          example: false
+          description: Whether or not OCR was used to extract the text
+        plaintext_content:
+          type: string
+          example: '347 U.S. 483 (1954)
+
+            BROWN ET AL.
+
+            v.
+
+            BOARD OF EDUCATION OF TOPEKA ET AL.
+
+            No. 1.
+
+            Supreme Court of United States.
+
+            Argued December 9, 1952.
+
+            Reargued December 8, 1953.
+
+            Decided May 17, 1954.
+
+            APPEAL FROM THE UNITED STATES DISTRICT COURT FOR THE DISTRICT OF KANSAS.[*]*484 Robert L. Carter argued the cause
+            for appellants in No. 1 on the original argument and on the reargument. Thurgood Marshall argued the cause for
+            appellants in No. 2 on the original argument and Spottswood W. Robinson, III, for appellants in No. 4 on the original
+            argument, and both argued the causes for appellants in Nos. 2 and 4 on the reargument. Louis L. Redding and Jack
+            Greenberg argued the cause for respondents in No. 10 on the original argument and Jack Greenberg and Thurgood
+            Marshall on the reargument.
+
+            On the briefs were Robert L. Carter, Thurgood Marshall, Spottswood W. Robinson, III, Louis L. Redding, Jack Greenberg,
+            George E. C. Hayes, William R. Ming, Jr., Constance Baker Motley, James M. Nabrit, Jr., Charles S. Scott, Frank
+            D. Reeves, Harold R. Boulware and Oliver W. Hill for appellants in Nos. 1, 2 and 4 and respondents in No. 10;
+            George M. Johnson for appellants in Nos. 1, 2 and 4; and Loren Miller for appellants in Nos. 2 and 4. Arthur D.
+            Shores and A. T. Walden were on the Statement as to Jurisdiction and a brief opposing a Motion to Dismiss or Affirm
+            in No. 2.
+
+            Paul E. Wilson, Assistant Attorney General of Kansas, argued the cause for appellees in No. 1 on the original
+            argument and on the reargument. With him on the briefs was Harold R. Fatzer, Attorney General.
+
+            John W. Davis argued the cause for appellees in No. 2 on the original argument and for appellees in Nos. 2 and
+            4 on the reargument. With him on the briefs in No. 2 were T. C. Callison, Attorney General of South Carolina,
+            Robert McC. Figg, Jr., S. E. Rogers, William R. Meagher and Taggart Whipple.
+
+            *485 J. Lindsay Almond, Jr., Attorney General of Virginia, and T. Justin Moore argued the cause for appellees
+            in No. 4 on the original argument and for appellees in Nos. 2 and 4 on the reargument. On the briefs in No. 4
+            were J. Lindsay Almond, Jr., Attorney General, and Henry T. Wickham, Special Assistant Attorney General, for the
+            State of Virginia, and T. Justin Moore, Archibald G. Robertson, John W. Riely and T. Justin Moore, Jr. for the
+            Prince Edward County School Authorities, appellees.
+
+            H. Albert Young, Attorney General of Delaware, argued the cause for petitioners in No. 10 on the original argument
+            and on the reargument. With him on the briefs was Louis J. Finger, Special Deputy Attorney General.
+
+            By special leave of Court, Assistant Attorney General Rankin argued the cause for the United States on the reargument,
+            as amicus curiae, urging reversal in Nos. 1, 2 and 4 and affirmance in No. 10. With him on the brief were Attorney
+            General Brownell, Philip Elman, Leon Ulman, William J. Lamont and M. Magdelena Schoch. James P. McGranery, then
+            Attorney General, and Philip Elman filed a brief for the United States on the original argument, as amicus curiae,
+            urging reversal in Nos. 1, 2 and 4 and affirmance in No. 10.
+
+            Briefs of amici curiae supporting appellants in No. 1 were filed by Shad Polier, Will Maslow and Joseph B. Robison
+            for the American Jewish Congress; by Edwin J. Lukas, Arnold Forster, Arthur Garfield Hays, Frank E. Karelsen,
+            Leonard Haas, Saburo Kido and Theodore Leskes for the American Civil Liberties Union et al.; and by John Ligtenberg
+            and Selma M. Borchardt for the American Federation of Teachers. Briefs of amici curiae supporting appellants in
+            No. 1 and respondents in No. 10 were filed by Arthur J. Goldberg and Thomas E. Harris *486 for the Congress of
+            Industrial Organizations and by Phineas Indritz for the American Veterans Committee, Inc.
+
+            MR. CHIEF JUSTICE WARREN delivered the opinion of the Court.
+
+            These cases come to us from the States of Kansas, South Carolina, Virginia, and Delaware. They are premised on
+            different facts and different local conditions, but a common legal question justifies their consideration together
+            in this consolidated opinion.[1]
+
+            *487 In each of the cases, minors of the Negro race, through their legal representatives, seek the aid of the
+            courts in obtaining admission to the public schools of their community on a nonsegregated basis. In each instance,
+            *488 they had been denied admission to schools attended by white children under laws requiring or permitting segregation
+            according to race. This segregation was alleged to deprive the plaintiffs of the equal protection of the laws
+            under the Fourteenth Amendment. In each of the cases other than the Delaware case, a three-judge federal district
+            court denied relief to the plaintiffs on the so-called "separate but equal" doctrine announced by this Court in
+            Plessy v. Ferguson, 163 U.S. 537. Under that doctrine, equality of treatment is accorded when the races are provided
+            substantially equal facilities, even though these facilities be separate. In the Delaware case, the Supreme Court
+            of Delaware adhered to that doctrine, but ordered that the plaintiffs be admitted to the white schools because
+            of their superiority to the Negro schools.
+
+            The plaintiffs contend that segregated public schools are not "equal" and cannot be made "equal," and that hence
+            they are deprived of the equal protection of the laws. Because of the obvious importance of the question presented,
+            the Court took jurisdiction.[2] Argument was heard in the 1952 Term, and reargument was heard this Term on certain
+            questions propounded by the Court.[3]
+
+            *489 Reargument was largely devoted to the circumstances surrounding the adoption of the Fourteenth Amendment
+            in 1868. It covered exhaustively consideration of the Amendment in Congress, ratification by the states, then
+            existing practices in racial segregation, and the views of proponents and opponents of the Amendment. This discussion
+            and our own investigation convince us that, although these sources cast some light, it is not enough to resolve
+            the problem with which we are faced. At best, they are inconclusive. The most avid proponents of the post-War
+            Amendments undoubtedly intended them to remove all legal distinctions among "all persons born or naturalized in
+            the United States." Their opponents, just as certainly, were antagonistic to both the letter and the spirit of
+            the Amendments and wished them to have the most limited effect. What others in Congress and the state legislatures
+            had in mind cannot be determined with any degree of certainty.
+
+            An additional reason for the inconclusive nature of the Amendment''s history, with respect to segregated schools,
+            is the status of public education at that time.[4] In the South, the movement toward free common schools, supported
+            *490 by general taxation, had not yet taken hold. Education of white children was largely in the hands of private
+            groups. Education of Negroes was almost nonexistent, and practically all of the race were illiterate. In fact,
+            any education of Negroes was forbidden by law in some states. Today, in contrast, many Negroes have achieved outstanding
+            success in the arts and sciences as well as in the business and professional world. It is true that public school
+            education at the time of the Amendment had advanced further in the North, but the effect of the Amendment on Northern
+            States was generally ignored in the congressional debates. Even in the North, the conditions of public education
+            did not approximate those existing today. The curriculum was usually rudimentary; ungraded schools were common
+            in rural areas; the school term was but three months a year in many states; and compulsory school attendance was
+            virtually unknown. As a consequence, it is not surprising that there should be so little in the history of the
+            Fourteenth Amendment relating to its intended effect on public education.
+
+            In the first cases in this Court construing the Fourteenth Amendment, decided shortly after its adoption, the
+            Court interpreted it as proscribing all state-imposed discriminations against the Negro race.[5] The doctrine
+            of *491 "separate but equal" did not make its appearance in this Court until 1896 in the case of Plessy v. Ferguson,
+            supra, involving not education but transportation.[6] American courts have since labored with the doctrine for
+            over half a century. In this Court, there have been six cases involving the "separate but equal" doctrine in the
+            field of public education.[7] In Cumming v. County Board of Education, 175 U.S. 528, and Gong Lum v. Rice, 275
+            U.S. 78, the validity of the doctrine itself was not challenged.[8] In more recent cases, all on the graduate
+            school *492 level, inequality was found in that specific benefits enjoyed by white students were denied to Negro
+            students of the same educational qualifications. Missouri ex rel. Gaines v. Canada, 305 U.S. 337; Sipuel v. Oklahoma,
+            332 U.S. 631; Sweatt v. Painter, 339 U.S. 629; McLaurin v. Oklahoma State Regents, 339 U.S. 637. In none of these
+            cases was it necessary to re-examine the doctrine to grant relief to the Negro plaintiff. And in Sweatt v. Painter,
+            supra, the Court expressly reserved decision on the question whether Plessy v. Ferguson should be held inapplicable
+            to public education.
+
+            In the instant cases, that question is directly presented. Here, unlike Sweatt v. Painter, there are findings
+            below that the Negro and white schools involved have been equalized, or are being equalized, with respect to buildings,
+            curricula, qualifications and salaries of teachers, and other "tangible" factors.[9] Our decision, therefore,
+            cannot turn on merely a comparison of these tangible factors in the Negro and white schools involved in each of
+            the cases. We must look instead to the effect of segregation itself on public education.
+
+            In approaching this problem, we cannot turn the clock back to 1868 when the Amendment was adopted, or even to
+            1896 when Plessy v. Ferguson was written. We must consider public education in the light of its full development
+            and its present place in American life throughout *493 the Nation. Only in this way can it be determined if segregation
+            in public schools deprives these plaintiffs of the equal protection of the laws.
+
+            Today, education is perhaps the most important function of state and local governments. Compulsory school attendance
+            laws and the great expenditures for education both demonstrate our recognition of the importance of education
+            to our democratic society. It is required in the performance of our most basic public responsibilities, even service
+            in the armed forces. It is the very foundation of good citizenship. Today it is a principal instrument in awakening
+            the child to cultural values, in preparing him for later professional training, and in helping him to adjust normally
+            to his environment. In these days, it is doubtful that any child may reasonably be expected to succeed in life
+            if he is denied the opportunity of an education. Such an opportunity, where the state has undertaken to provide
+            it, is a right which must be made available to all on equal terms.
+
+            We come then to the question presented: Does segregation of children in public schools solely on the basis of
+            race, even though the physical facilities and other "tangible" factors may be equal, deprive the children of the
+            minority group of equal educational opportunities? We believe that it does.
+
+            In Sweatt v. Painter, supra, in finding that a segregated law school for Negroes could not provide them equal
+            educational opportunities, this Court relied in large part on "those qualities which are incapable of objective
+            measurement but which make for greatness in a law school." In McLaurin v. Oklahoma State Regents, supra, the Court,
+            in requiring that a Negro admitted to a white graduate school be treated like all other students, again resorted
+            to intangible considerations: ". . . his ability to study, to engage in discussions and exchange views with other
+            students, and, in general, to learn his profession." *494 Such considerations apply with added force to children
+            in grade and high schools. To separate them from others of similar age and qualifications solely because of their
+            race generates a feeling of inferiority as to their status in the community that may affect their hearts and minds
+            in a way unlikely ever to be undone. The effect of this separation on their educational opportunities was well
+            stated by a finding in the Kansas case by a court which nevertheless felt compelled to rule against the Negro
+            plaintiffs:
+
+            "Segregation of white and colored children in public schools has a detrimental effect upon the colored children.
+            The impact is greater when it has the sanction of the law; for the policy of separating the races is usually interpreted
+            as denoting the inferiority of the negro group. A sense of inferiority affects the motivation of a child to learn.
+            Segregation with the sanction of law, therefore, has a tendency to [retard] the educational and mental development
+            of negro children and to deprive them of some of the benefits they would receive in a racial[ly] integrated school
+            system."[10]
+
+            Whatever may have been the extent of psychological knowledge at the time of Plessy v. Ferguson, this finding is
+            amply supported by modern authority.[11] Any language *495 in Plessy v. Ferguson contrary to this finding is rejected.
+
+            We conclude that in the field of public education the doctrine of "separate but equal" has no place. Separate
+            educational facilities are inherently unequal. Therefore, we hold that the plaintiffs and others similarly situated
+            for whom the actions have been brought are, by reason of the segregation complained of, deprived of the equal
+            protection of the laws guaranteed by the Fourteenth Amendment. This disposition makes unnecessary any discussion
+            whether such segregation also violates the Due Process Clause of the Fourteenth Amendment.[12]
+
+            Because these are class actions, because of the wide applicability of this decision, and because of the great
+            variety of local conditions, the formulation of decrees in these cases presents problems of considerable complexity.
+            On reargument, the consideration of appropriate relief was necessarily subordinated to the primary question the
+            constitutionality of segregation in public education. We have now announced that such segregation is a denial
+            of the equal protection of the laws. In order that we may have the full assistance of the parties in formulating
+            decrees, the cases will be restored to the docket, and the parties are requested to present further argument on
+            Questions 4 and 5 previously propounded by the Court for the reargument this Term.[13] The Attorney General *496
+            of the United States is again invited to participate. The Attorneys General of the states requiring or permitting
+            segregation in public education will also be permitted to appear as amici curiae upon request to do so by September
+            15, 1954, and submission of briefs by October 1, 1954.[14]
+
+            It is so ordered.
+
+            NOTES
+
+            [*]  Together with No. 2, Briggs et al. v. Elliott et al., on appeal from the United States District Court for
+            the Eastern District of South Carolina, argued December 9-10, 1952, reargued December 7-8, 1953; No. 4, Davis
+            et al. v. County School Board of Prince Edward County, Virginia, et al., on appeal from the United States District
+            Court for the Eastern District of Virginia, argued December 10, 1952, reargued December 7-8, 1953; and No. 10,
+            Gebhart et al. v. Belton et al., on certiorari to the Supreme Court of Delaware, argued December 11, 1952, reargued
+            December 9, 1953.
+
+            [1]  In the Kansas case, Brown v. Board of Education, the plaintiffs are Negro children of elementary school age
+            residing in Topeka. They brought this action in the United States District Court for the District of Kansas to
+            enjoin enforcement of a Kansas statute which permits, but does not require, cities of more than 15,000 population
+            to maintain separate school facilities for Negro and white students. Kan. Gen. Stat. § 72-1724 (1949). Pursuant
+            to that authority, the Topeka Board of Education elected to establish segregated elementary schools. Other public
+            schools in the community, however, are operated on a nonsegregated basis. The three-judge District Court, convened
+            under 28 U.S. C. §§ 2281 and 2284, found that segregation in public education has a detrimental effect upon Negro
+            children, but denied relief on the ground that the Negro and white schools were substantially equal with respect
+            to buildings, transportation, curricula, and educational qualifications of teachers. 98 F. Supp. 797. The case
+            is here on direct appeal under 28 U.S. C. § 1253.
+
+
+            In the South Carolina case, Briggs v. Elliott, the plaintiffs are Negro children of both elementary and high school
+            age residing in Clarendon County. They brought this action in the United States District Court for the Eastern
+            District of South Carolina to enjoin enforcement of provisions in the state constitution and statutory code which
+            require the segregation of Negroes and whites in public schools. S. C. Const., Art. XI, § 7; S. C. Code § 5377
+            (1942). The three-judge District Court, convened under 28 U.S. C. §§ 2281 and 2284, denied the requested relief.
+            The court found that the Negro schools were inferior to the white schools and ordered the defendants to begin
+            immediately to equalize the facilities. But the court sustained the validity of the contested provisions and denied
+            the plaintiffs admission to the white schools during the equalization program. 98 F. Supp. 529. This Court vacated
+            the District Court''s judgment and remanded the case for the purpose of obtaining the court''s views on a report
+            filed by the defendants concerning the progress made in the equalization program. 342 U.S. 350. On remand, the
+            District Court found that substantial equality had been achieved except for buildings and that the defendants
+            were proceeding to rectify this inequality as well. 103 F. Supp. 920. The case is again here on direct appeal
+            under 28 U.S. C. § 1253.
+
+            In the Virginia case, Davis v. County School Board, the plaintiffs are Negro children of high school age residing
+            in Prince Edward county. They brought this action in the United States District Court for the Eastern District
+            of Virginia to enjoin enforcement of provisions in the state constitution and statutory code which require the
+            segregation of Negroes and whites in public schools. Va. Const., § 140; Va. Code § 22-221 (1950). The three-judge
+            District Court, convened under 28 U.S. C. §§ 2281 and 2284, denied the requested relief. The court found the Negro
+            school inferior in physical plant, curricula, and transportation, and ordered the defendants forthwith to provide
+            substantially equal curricula and transportation and to "proceed with all reasonable diligence and dispatch to
+            remove" the inequality in physical plant. But, as in the South Carolina case, the court sustained the validity
+            of the contested provisions and denied the plaintiffs admission to the white schools during the equalization program.
+            103 F. Supp. 337. The case is here on direct appeal under 28 U.S. C. § 1253.
+
+            In the Delaware case, Gebhart v. Belton, the plaintiffs are Negro children of both elementary and high school
+            age residing in New Castle County. They brought this action in the Delaware Court of Chancery to enjoin enforcement
+            of provisions in the state constitution and statutory code which require the segregation of Negroes and whites
+            in public schools. Del. Const., Art. X, § 2; Del. Rev. Code § 2631 (1935). The Chancellor gave judgment for the
+            plaintiffs and ordered their immediate admission to schools previously attended only by white children, on the
+            ground that the Negro schools were inferior with respect to teacher training, pupil-teacher ratio, extracurricular
+            activities, physical plant, and time and distance involved in travel. 87 A.2d 862. The Chancellor also found that
+            segregation itself results in an inferior education for Negro children (see note 10, infra), but did not rest
+            his decision on that ground. Id., at 865. The Chancellor''s decree was affirmed by the Supreme Court of Delaware,
+            which intimated, however, that the defendants might be able to obtain a modification of the decree after equalization
+            of the Negro and white schools had been accomplished. 91 A.2d 137, 152. The defendants, contending only that the
+            Delaware courts had erred in ordering the immediate admission of the Negro plaintiffs to the white schools, applied
+            to this Court for certiorari. The writ was granted, 344 U.S. 891. The plaintiffs, who were successful below, did
+            not submit a cross-petition.
+
+            [2]  344 U.S. 1, 141, 891.
+
+            [3]  345 U.S. 972. The Attorney General of the United States participated both Terms as amicus curiae.
+
+            [4]  For a general study of the development of public education prior to the Amendment, see Butts and Cremin,
+            A History of Education in American Culture (1953), Pts. I, II; Cubberley, Public Education in the United States
+            (1934 ed.), cc. II-XII. School practices current at the time of the adoption of the Fourteenth Amendment are described
+            in Butts and Cremin, supra, at 269-275; Cubberley, supra, at 288-339, 408-431; Knight, Public Education in the
+            South (1922), cc. VIII, IX. See also H. Ex. Doc. No. 315, 41st Cong., 2d Sess. (1871). Although the demand for
+            free public schools followed substantially the same pattern in both the North and the South, the development in
+            the South did not begin to gain momentum until about 1850, some twenty years after that in the North. The reasons
+            for the somewhat slower development in the South (e. g., the rural character of the South and the different regional
+            attitudes toward state assistance) are well explained in Cubberley, supra, at 408-423. In the country as a whole,
+            but particularly in the South, the War virtually stopped all progress in public education. Id., at 427-428. The
+            low status of Negro education in all sections of the country, both before and immediately after the War, is described
+            in Beale, A History of Freedom of Teaching in American Schools (1941), 112-132, 175-195. Compulsory school attendance
+            laws were not generally adopted until after the ratification of the Fourteenth Amendment, and it was not until
+            1918 that such laws were in force in all the states. Cubberley, supra, at 563-565.
+
+            [5]  Slaughter-House Cases, 16 Wall. 36, 67-72 (1873); Strauder v. West Virginia, 100 U.S. 303, 307-308 (1880):
+
+
+            "It ordains that no State shall deprive any person of life, liberty, or property, without due process of law,
+            or deny to any person within its jurisdiction the equal protection of the laws. What is this but declaring that
+            the law in the States shall be the same for the black as for the white; that all persons, whether colored or white,
+            shall stand equal before the laws of the States, and, in regard to the colored race, for whose protection the
+            amendment was primarily designed, that no discrimination shall be made against them by law because of their color?
+            The words of the amendment, it is true, are prohibitory, but they contain a necessary implication of a positive
+            immunity, or right, most valuable to the colored race,the right to exemption from unfriendly legislation against
+            them distinctively as colored,exemption from legal discriminations, implying inferiority in civil society, lessening
+            the security of their enjoyment of the rights which others enjoy, and discriminations which are steps towards
+            reducing them to the condition of a subject race."
+
+            See also Virginia v. Rives, 100 U.S. 313, 318 (1880); Ex parte Virginia, 100 U.S. 339, 344-345 (1880).
+
+            [6]  The doctrine apparently originated in Roberts v. City of Boston, 59 Mass. 198, 206 (1850), upholding school
+            segregation against attack as being violative of a state constitutional guarantee of equality. Segregation in
+            Boston public schools was eliminated in 1855. Mass. Acts 1855, c. 256. But elsewhere in the North segregation
+            in public education has persisted in some communities until recent years. It is apparent that such segregation
+            has long been a nationwide problem, not merely one of sectional concern.
+
+            [7]  See also Berea College v. Kentucky, 211 U.S. 45 (1908).
+
+            [8]  In the Cumming case, Negro taxpayers sought an injunction requiring the defendant school board to discontinue
+            the operation of a high school for white children until the board resumed operation of a high school for Negro
+            children. Similarly, in the Gong Lum case, the plaintiff, a child of Chinese descent, contended only that state
+            authorities had misapplied the doctrine by classifying him with Negro children and requiring him to attend a Negro
+            school.
+
+            [9]  In the Kansas case, the court below found substantial equality as to all such factors. 98 F. Supp. 797, 798.
+            In the South Carolina case, the court below found that the defendants were proceeding "promptly and in good faith
+            to comply with the court''s decree." 103 F. Supp. 920, 921. In the Virginia case, the court below noted that the
+            equalization program was already "afoot and progressing" (103 F. Supp. 337, 341); since then, we have been advised,
+            in the Virginia Attorney General''s brief on reargument, that the program has now been completed. In the Delaware
+            case, the court below similarly noted that the state''s equalization program was well under way. 91 A.2d 137,
+            149.
+
+            [10]  A similar finding was made in the Delaware case: "I conclude from the testimony that in our Delaware society,
+            State-imposed segregation in education itself results in the Negro children, as a class, receiving educational
+            opportunities which are substantially inferior to those available to white children otherwise similarly situated."
+            87 A.2d 862, 865.
+
+            [11]  K. B. Clark, Effect of Prejudice and Discrimination on Personality Development (Midcentury White House Conference
+            on Children and Youth, 1950); Witmer and Kotinsky, Personality in the Making (1952), c. VI; Deutscher and Chein,
+            The Psychological Effects of Enforced Segregation: A Survey of Social Science Opinion, 26 J. Psychol. 259 (1948);
+            Chein, What are the Psychological Effects of Segregation Under Conditions of Equal Facilities?, 3 Int. J. Opinion
+            and Attitude Res. 229 (1949); Brameld, Educational Costs, in Discrimination and National Welfare (MacIver, ed.,
+            (1949), 44-48; Frazier, The Negro in the United States (1949), 674-681. And see generally Myrdal, An American
+            Dilemma (1944).
+
+            [12]  See Bolling v. Sharpe, post, p. 497, concerning the Due Process Clause of the Fifth Amendment.
+
+            [13]  "4. Assuming it is decided that segregation in public schools violates the Fourteenth Amendment
+
+
+            "(a) would a decree necessarily follow providing that, within the limits set by normal geographic school districting,
+            Negro children should forthwith be admitted to schools of their choice, or
+
+            "(b) may this Court, in the exercise of its equity powers, permit an effective gradual adjustment to be brought
+            about from existing segregated systems to a system not based on color distinctions?
+
+            "5. On the assumption on which questions 4 (a) and (b) are based, and assuming further that this Court will exercise
+            its equity powers to the end described in question 4 (b),
+
+            "(a) should this Court formulate detailed decrees in these cases;
+
+            "(b) if so, what specific issues should the decrees reach;
+
+            "(c) should this Court appoint a special master to hear evidence with a view to recommending specific terms for
+            such decrees;
+
+            "(d) should this Court remand to the courts of first instance with directions to frame decrees in these cases,
+            and if so what general directions should the decrees of this Court include and what procedures should the courts
+            of first instance follow in arriving at the specific terms of more detailed decrees?"
+
+            [14]  See Rule 42, Revised Rules of this Court (effective July 1, 1954).'
+          description: Plain text representation of the opinion text, if available. Otherwise, empty string.
+        updated_at:
+        - allOf:
+          - $ref: '#/components/schemas/DateTime'
+          - example: '2023-08-02T22:56:54Z'
+        citations:
+          description: Array of possible citations for the case. Can be empty for unpublished opinions.
+          type: array
+          items:
+            type: string
+          example:
+          - 1954 U.S. LEXIS 2094
+          - 347 U.S. 483
+          - 74 S. Ct. 686
+          - 98 L. Ed. 2d 873
+          - 98 L. Ed. 873
+          - 53 Ohio Op. 326
+          - 38 A.L.R. 2d 1180
+      required:
+      - case_name
+      - jurisdiction_key
+      - court
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    LawFeature:
+      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
+      type: object
+      properties:
+        name:
+          type: string
+        available:
+          type: boolean
+    Date:
+      description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
+      type: string
+      oneOf:
+      - type: string
+        format: date
+        description: An ISO 8601 date string (e.g., "2025-04-17").
+        example: '2025-12-31'
+      - type: string
+        enum:
+        - Infinity
+        - -Infinity
+        description: Represents positive infinity ("Infinity") or negative infinity ("-Infinity").
+      - type: 'null'
+        description: Represents an unset or not applicable date.
+      example: Infinity
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
+    DateTime:
+      description: ISO 8601 DateTime
+      type: string
+      format: date-time
+  parameters:
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most
+        U.S. states and territories.
+    keywordQueryParam:
+      name: query
+      in: query
+      required: true
+      schema:
+        type: string
+        example: apple
+      description: One or more keywords to search by
+    citationQueryParam:
+      name: query
+      in: query
+      required: true
+      schema:
+        type: string
+        example: 48 CFR 52.249-2
+      description: Bluebook legal citation for a statute, code, rule, regulation, or constitution
+    queryTypeParam:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        default: or
+        enum:
+        - or
+        - and
+        - phrase
+      description: Search type. Default is 'or'.
+    lawKeyParam:
+      name: law_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED-CFR
+      description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation
+        of a law type joined by a '-' character.
+    courtKeyParam:
+      name: court_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: scotus
+      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
+    withFederalParam:
+      name: with_federal
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be
+        included in the search scope.
+    limitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+      description: Maximum number of results to return
+    pageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Combines with `limit` to implement cursor-based pagination. This parameter sets the cursor to the next
+        page of data.
+  responses:
+    okArrayOfLaws:
+      description: Array of Laws
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Law'
+    okSingleDivision:
+      description: Single Division
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Division'
+    okArrayOfDivisions:
+      description: Array of Divisions
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Division'
+    okArrayOfDivisionUpdates:
+      description: Array of DivisionUpdates
+      headers:
+        link:
+          description: Comma-separated list of RFC-8288 links. The URL will be enclosed by angle brackets. A semicolon will
+            separate the URL from the relationship description. The relationship will be a key-value pair in the form of rel="{{relationship}}".
+            The relationship will either be "first" or "next". This describes which page the related URL will fetch.
+          schema:
+            type: string
+            example: <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page&limit=200>;
+              rel="first", <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page=eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9&limit=200>;
+              rel="next"
+        current-page:
+          description: Page ID for the current page
+          schema:
+            type: string
+            example: eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9
+        page-items:
+          description: Number of items on each page. This matches the limit param.
+          schema:
+            type: integer
+            example: 200
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DivisionUpdate'
+    okArrayOfOpinions:
+      description: Array of Opinions
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Opinion'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    badRequest:
+      description: 400 Bad Request. Please check your jurisdiction and citation format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    serverError:
+      description: 500 Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+security:
+- bearerAuth: []
+x-ext-urls: {}

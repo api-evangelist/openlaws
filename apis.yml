@@ -1,12 +1,15 @@
 aid: openlaws
 name: OpenLaws
 description: >-
-  OpenLaws provides programmatic access to law data including statutes,
-  regulations, and case law across U.S. jurisdictions. The API supports
-  keyword and hybrid search, jurisdiction and court filtering, citation
-  identification and validation, historical version queries with redline
-  comparisons, and citation lookup with mapping to authoritative government
-  sources.
+  OpenLaws is a Public Benefit Corporation that provides programmatic access
+  to U.S. law text — federal and state statutes, regulations, constitutions,
+  and case law — through a unified Legal Data API. The platform exposes
+  keyword and citation search, hierarchical division retrieval, historical
+  versions with redline comparisons, citation parsing and validation, and
+  deep links to authoritative government sources. Coverage spans 53 U.S.
+  jurisdictions (50 states + D.C. + Puerto Rico + Federal) with more than
+  4.3 million law sections under a single data model, targeted at RegTech,
+  LegalTech, GRC / IRM, generative AI / RAG, and legal research workloads.
 type: Index
 position: Consumer
 access: 3rd-Party
@@ -16,38 +19,154 @@ tags:
   - Law
   - Statutes
   - Regulations
+  - Constitutions
   - Case Law
-  - Search
   - Citations
+  - Search
+  - RAG
+  - LegalTech
+  - RegTech
+  - Compliance
+  - GRC
+  - Government Data
 created: '2025-03-01'
-modified: '2026-04-28'
+modified: '2026-05-21'
 url: >-
   https://raw.githubusercontent.com/api-evangelist/openlaws/refs/heads/main/apis.yml
-specificationVersion: '0.19'
+specificationVersion: '0.20'
 apis:
   - aid: openlaws:openlaws
-    name: OpenLaws
+    name: OpenLaws Legal Data API
     description: >-
-      OpenLaws API exposes search across statutes, regulations, and case law
-      with BM25 or hybrid retrieval; jurisdiction and court filtering; legal
-      citation parsing and validation; historical version queries and redline
-      comparisons; and citation-to-government-source mapping for use in
-      research and AI applications.
+      The OpenLaws Legal Data API exposes statutes, regulations, constitutions,
+      and case law across 53 U.S. jurisdictions through a unified data model.
+      It supports keyword and BM25 / hybrid search scoped by jurisdiction,
+      law type, or court; hierarchical Division retrieval over the structured
+      law tree; Bluebook citation parsing, validation, and lookup; historical
+      versions of Divisions with diff / redline comparison (Enterprise); and
+      deep linking back to authoritative government sources for use in legal
+      research, compliance workflows, and AI / RAG applications.
     humanURL: https://openlaws.us/api/
     baseURL: https://api.openlaws.us
+    version: '1.0.4'
     tags:
       - Legal
       - Law
       - Statutes
       - Regulations
+      - Constitutions
       - Case Law
       - Search
       - Citations
+      - Jurisdictions
+      - Courts
     properties:
       - type: Documentation
         url: https://openlaws.apidocumentation.com
       - type: HumanURL
         url: https://openlaws.us/api/
+      - type: GettingStarted
+        url: https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api
+      - type: SignUp
+        url: https://1be187uhimk.typeform.com/to/PwYQaCu4
+      - type: ChangeLog
+        url: https://openlaws.apidocumentation.com/guide/release-notes
+      - type: TermsOfService
+        url: https://openlaws.us/terms
+      - type: OpenAPI
+        url: openapi/openlaws-openapi.yml
+      - type: OpenAPI
+        url: openapi/openlaws-openapi.json
+      - type: Plan
+        url: plans/openlaws-plans-pricing.yml
+      - type: Rate Limit
+        url: rate-limits/openlaws-rate-limits.yml
+      - type: FinOps
+        url: finops/openlaws-finops.yml
+    features:
+      - name: Jurisdiction Catalog
+        description: List and inspect all 53 U.S. jurisdictions (federal, 50 states, D.C., Puerto Rico) with metadata and supported law types.
+      - name: Laws by Jurisdiction
+        description: Discover the law types available in each jurisdiction (e.g. United States Code, Code of Federal Regulations, state statutes / regulations / constitutions).
+      - name: Hierarchical Division Retrieval
+        description: Walk the full structured tree of any law — titles, chapters, parts, sections — by jurisdiction, law key, and OpenLaws path.
+      - name: Keyword Search (Jurisdiction)
+        description: Search across all laws within a jurisdiction with keyword / BM25-style retrieval, paginated, with snippet highlighting.
+      - name: Keyword Search (Law)
+        description: Narrow keyword search to a specific law type within a jurisdiction (e.g. only Code of Federal Regulations).
+      - name: Citation Lookup
+        description: Resolve a Bluebook-formatted statute, regulation, or constitution citation directly to the underlying Division.
+      - name: Case Law Search
+        description: Keyword search of published and unpublished case opinions scoped by jurisdiction, with optional court filters.
+      - name: Case Citation Lookup
+        description: Resolve a Bluebook-formatted case citation to the matching Opinion record.
+      - name: Court Directory
+        description: Enumerate courts within a jurisdiction and retrieve a single court's metadata.
+      - name: Historical Versions and Redlines
+        description: Enterprise endpoints returning Divisions created or updated after a given date, with subtree scoping, suitable for diff / redline workflows.
+      - name: Unified Data Model
+        description: One consistent schema for statutes, regulations, constitutions, and case law across all 53 jurisdictions.
+      - name: Authoritative Source Linking
+        description: Every Division and Opinion maps back to a citable government source URL for legal defensibility.
+    useCases:
+      - name: GRC and IRM Integration
+        description: Embed regulation text into Governance, Risk, and Compliance or Integrated Risk Management workflows and questionnaires.
+      - name: Citation Validation
+        description: Identify, parse, and validate malformed legal citations across documents, contracts, and databases.
+      - name: Legal Research
+        description: Deep-link from research products into authoritative statute, regulation, and case sources.
+      - name: Regulatory Change Tracking
+        description: Use the Enterprise updates endpoints to monitor new and amended Divisions across a regulator's corpus.
+      - name: Generative AI and RAG
+        description: Feed validated, source-attributed law text into RAG, agentic workflows, and prompt grounding for legal LLM applications.
+      - name: Legal NLP and ML Training
+        description: Source structured law data for training and evaluating Natural Legal Language Processing models.
+      - name: LegalTech and RegTech SaaS
+        description: Power compliance research tools, case-law analytics, and document processing platforms with a single law API.
+      - name: AI Explainability
+        description: Surface original law text alongside AI-generated answers so end users can verify and cite the underlying authority.
+      - name: Access-to-Justice Tooling
+        description: Custom bulk-data and non-profit programs for access-to-justice and public-interest applications.
+    coverage:
+      - name: Federal Jurisdiction
+        description: 100% coverage of federal statutes (U.S. Code) and federal regulations (Code of Federal Regulations), plus federal case opinions.
+      - name: 50 U.S. States
+        description: Statutes, regulations, and case law across all 50 states.
+      - name: District of Columbia
+        description: Statutes, regulations, and case law for D.C.
+      - name: Puerto Rico
+        description: Statutes, regulations, and case law for Puerto Rico.
+      - name: Volume
+        description: 4,332,953+ Sections of law tracked under a unified data model.
+    integrations:
+      - name: Authoritative U.S. Government Law Sources
+      - name: Bluebook Citation Format
+      - name: RAG Pipelines
+      - name: GRC / IRM Platforms
+    authentication:
+      - type: Bearer Token
+        description: HTTP Bearer authentication using an API token issued by OpenLaws.
+common:
+  - type: Website
+    url: https://openlaws.us/
+  - type: Documentation
+    url: https://openlaws.apidocumentation.com
+  - type: GettingStarted
+    url: https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api
+  - type: SignUp
+    url: https://1be187uhimk.typeform.com/to/PwYQaCu4
+  - type: ChangeLog
+    url: https://openlaws.apidocumentation.com/guide/release-notes
+  - type: TermsOfService
+    url: https://openlaws.us/terms
+  - type: ContactEmail
+    url: mailto:team@openlaws.us
+  - type: Plan
+    url: plans/openlaws-plans-pricing.yml
+  - type: Rate Limit
+    url: rate-limits/openlaws-rate-limits.yml
+  - type: FinOps
+    url: finops/openlaws-finops.yml
 maintainers:
   - FN: Kin Lane
     email: kin@apievangelist.com
