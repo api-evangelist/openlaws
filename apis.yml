@@ -67,7 +67,7 @@ apis:
         url: https://openlaws.us/api/
       - type: GettingStarted
         url: https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api
-      - type: SignUp
+      - type: Signup
         url: https://1be187uhimk.typeform.com/to/PwYQaCu4
       - type: ChangeLog
         url: https://openlaws.apidocumentation.com/guide/release-notes
@@ -77,9 +77,9 @@ apis:
         url: openapi/openlaws-openapi.yml
       - type: OpenAPI
         url: openapi/openlaws-openapi.json
-      - type: Plan
+      - type: Plans
         url: plans/openlaws-plans-pricing.yml
-      - type: Rate Limit
+      - type: RateLimits
         url: rate-limits/openlaws-rate-limits.yml
       - type: FinOps
         url: finops/openlaws-finops.yml
@@ -153,7 +153,7 @@ common:
     url: https://openlaws.apidocumentation.com
   - type: GettingStarted
     url: https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api
-  - type: SignUp
+  - type: Signup
     url: https://1be187uhimk.typeform.com/to/PwYQaCu4
   - type: ChangeLog
     url: https://openlaws.apidocumentation.com/guide/release-notes
@@ -161,9 +161,9 @@ common:
     url: https://openlaws.us/terms
   - type: ContactEmail
     url: mailto:team@openlaws.us
-  - type: Plan
+  - type: Plans
     url: plans/openlaws-plans-pricing.yml
-  - type: Rate Limit
+  - type: RateLimits
     url: rate-limits/openlaws-rate-limits.yml
   - type: FinOps
     url: finops/openlaws-finops.yml
