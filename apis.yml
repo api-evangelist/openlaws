@@ -147,6 +147,10 @@ apis:
       - type: Bearer Token
         description: HTTP Bearer authentication using an API token issued by OpenLaws.
 common:
+  - type: DomainSecurity
+    url: security/openlaws-domain-security.yml
+  - type: Authentication
+    url: authentication/openlaws-authentication.yml
   - type: Website
     url: https://openlaws.us/
   - type: Documentation
