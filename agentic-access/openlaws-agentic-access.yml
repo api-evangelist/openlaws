@@ -1,0 +1,294 @@
+generated: '2026-07-15'
+method: generated
+source: openapi/openlaws-openapi.json, openapi/openlaws-openapi.yml
+description: Recommended x-agentic-access execution contracts, classified heuristically from
+  the OpenAPI. A governance starting point for exposing this API to AI agents — review and bind
+  audience per deployment. See research/curity/agentic-governance/.
+summary:
+  operations: 28
+  by_action_class:
+    connected: 28
+  by_consequence:
+    read: 28
+  human_in_the_loop_required: 0
+operations:
+- path: /api/v1/jurisdictions
+  method: get
+  operationId: listJurisdictions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions
+  method: get
+  operationId: getRootDivisions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{path}
+  method: get
+  operationId: getDivsisionsByPath
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/updates
+  method: get
+  operationId: getDivisionsUpdatedAfter
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{starting_path}/updates
+  method: get
+  operationId: getDivisionsByPathUpdatedAfter
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/search
+  method: get
+  operationId: keywordSearchDivisionWithinJurisdiction
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/search
+  method: get
+  operationId: keywordSearchDivisionWithinLaw
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/citations
+  method: get
+  operationId: lookupByBluebookCitation
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws
+  method: get
+  operationId: getLawsByJurisdiction
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/courts
+  method: get
+  operationId: getCourtsByJurisdiction
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/courts/{court_key}
+  method: get
+  operationId: getCourt
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/opinions/search
+  method: get
+  operationId: keywordSearchOpinions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/opinions/citations
+  method: get
+  operationId: lookupOpinionByBluebookCitation
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/laws
+  method: get
+  operationId: getLaws
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions
+  method: get
+  operationId: listJurisdictions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions
+  method: get
+  operationId: getRootDivisions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{path}
+  method: get
+  operationId: getDivsisionsByPath
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/updates
+  method: get
+  operationId: getDivisionsUpdatedAfter
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{starting_path}/updates
+  method: get
+  operationId: getDivisionsByPathUpdatedAfter
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/search
+  method: get
+  operationId: keywordSearchDivisionWithinJurisdiction
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/search
+  method: get
+  operationId: keywordSearchDivisionWithinLaw
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws/citations
+  method: get
+  operationId: lookupByBluebookCitation
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/laws
+  method: get
+  operationId: getLawsByJurisdiction
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/courts
+  method: get
+  operationId: getCourtsByJurisdiction
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/courts/{court_key}
+  method: get
+  operationId: getCourt
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/opinions/search
+  method: get
+  operationId: keywordSearchOpinions
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/jurisdictions/{jurisdiction_key}/opinions/citations
+  method: get
+  operationId: lookupOpinionByBluebookCitation
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none
+- path: /api/v1/laws
+  method: get
+  operationId: getLaws
+  x-agentic-access:
+    action-class: connected
+    consequence: read
+    subject: optional
+    token:
+      max-ttl: 3600
+    audit: none

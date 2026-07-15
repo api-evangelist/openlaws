@@ -147,6 +147,8 @@ apis:
       - type: Bearer Token
         description: HTTP Bearer authentication using an API token issued by OpenLaws.
 common:
+  - type: AgenticAccess
+    url: agentic-access/openlaws-agentic-access.yml
   - type: DomainSecurity
     url: security/openlaws-domain-security.yml
   - type: Authentication
