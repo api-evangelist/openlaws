@@ -1,0 +1,782 @@
+openapi: 3.1.0
+info:
+  title: OpenLaws API Documentation Courts Law Divisions API
+  version: 1.0.4
+  description: OpenLaws Legal Data API
+  contact:
+    name: OpenLaws PBC
+    url: https://openlaws.us/api
+    email: team@openlaws.us
+  license:
+    name: Commercial
+    url: https://openlaws.us/terms
+servers:
+- url: https://api.openlaws.us
+security:
+- bearerAuth: []
+tags:
+- name: Law Divisions
+  description: Divisions represent the hierarchical documents that make up statutes, regulations, and constitutions. Each document has a 'path' which uniquely identifies the document and where it resides in the hierarchy of the law.
+paths:
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions:
+    get:
+      summary: Get a specific Law's Root Divisions
+      description: Root divisions are top of the document hierarchy for a law. Typically, these documents are Titles or Agency document types.
+      tags:
+      - Law Divisions
+      parameters:
+      - name: jurisdiction_key
+        description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: AK
+      - name: law_key
+        description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: AK-CONST
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisions'
+          description: Array of the root Divisions for a Law
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getRootDivisions
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{path}:
+    get:
+      summary: Get Division by Jurisdiction and OpenLaws path
+      description: A precise way of retrieving one Division object with its unique path
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/lawKeyParam'
+      - name: path
+        description: An OpenLaws field that describes the Division's relationship to other documents in the law's hierarchy. Combined with the law_key and effective_date_* fields this creates a unique key for Divisions.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: title_12.chapter_i.part_4.subpart_d.section_4_62
+      responses:
+        '200':
+          $ref: '#/components/responses/okSingleDivision'
+          description: Single Division matching the path
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: getDivsisionsByPath
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/updates:
+    get:
+      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a date.
+      description: This query returns a list of DivisionUpdate objects which are a lightweight subset of the Division. DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc8288).
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/lawKeyParam'
+      - name: updated_after
+        description: Return list of Divisions updated AFTER this ISO Date (UTC). Date must be within 90 days of the current date.
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2025-05-01'
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 100
+          maximum: 500
+        description: Maximum number of results to return
+      - $ref: '#/components/parameters/pageParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisionUpdates'
+          description: An array of DivisionUpdates which contain law_keys, paths, and effective dates to identify which Divisions have been created or changed.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getDivisionsUpdatedAfter
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{starting_path}/updates:
+    get:
+      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a date within a subtree of Divisions.
+      description: This query returns a list of DivisionUpdate objects within the Division hierarchy beginning at starting_path. DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc8288).
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/lawKeyParam'
+      - name: updated_after
+        description: Return list of Divisions updated AFTER this ISO Date (UTC). Date must be within 90 days of the current date.
+        in: query
+        required: true
+        schema:
+          type: string
+          format: date
+          example: '2025-05-01'
+      - name: starting_path
+        description: The starting path to traverse down to find updated Divisions.
+        in: path
+        required: true
+        schema:
+          type: string
+          example: title_12.chapter_i
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          default: 100
+          maximum: 500
+        description: Maximum number of results to return
+      - $ref: '#/components/parameters/pageParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisionUpdates'
+          description: An array of DivisionUpdates which contain law_keys, paths, and effective dates to identify which Divisions have been created or changed.
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getDivisionsByPathUpdatedAfter
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/search:
+    get:
+      summary: Keyword Search within a Jurisdiction
+      description: Heuristic keyword search within a specific Jurisdiction (and optionally, federal Laws at the same time with `with_federal`). The search scope will include statutes, rules, regulations, and constitutions. See "Keyword Search Case Opinions" for case law search.
+      tags:
+      - Law Divisions
+      parameters:
+      - name: jurisdiction_key
+        in: path
+        required: true
+        schema:
+          type: string
+          example: CA
+        description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+      - $ref: '#/components/parameters/keywordQueryParam'
+      - $ref: '#/components/parameters/queryTypeParam'
+      - $ref: '#/components/parameters/withFederalParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisions'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: keywordSearchDivisionWithinJurisdiction
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/search:
+    get:
+      summary: Keyword Search within a Jurisdiction and a specific law_key for that Jurisdiction
+      description: 'Heuristic keyword search within a specific Jurisdiction and a specific type of law for that jurisdiction, ex: Jurisdiction=TX and law_key=TX-CONST (constitution)'
+      tags:
+      - Law Divisions
+      parameters:
+      - name: jurisdiction_key
+        in: path
+        required: true
+        schema:
+          type: string
+          example: CA
+        description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+      - name: law_key
+        in: path
+        required: true
+        schema:
+          type: string
+          example: CA-RR
+        description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          example: apple banana
+        description: One or more keywords to search by
+      - $ref: '#/components/parameters/queryTypeParam'
+      - $ref: '#/components/parameters/limitParam'
+      responses:
+        '200':
+          $ref: '#/components/responses/okArrayOfDivisions'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: keywordSearchDivisionWithinLaw
+  /api/v1/jurisdictions/{jurisdiction_key}/laws/citations:
+    get:
+      summary: Lookup by Jurisdiction and Bluebook legal citation for a statute, regulation, or constitution
+      description: We highly recommend this method of looking up Divisions when legal citations are available because it is the most precise way to identify relevant documents.
+      tags:
+      - Law Divisions
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - name: query
+        in: query
+        required: true
+        schema:
+          type: string
+          example: 12 CFR § 1002.1
+        description: Bluebook legal citation for a statute, code, rule, regulation, or constitution
+      responses:
+        '200':
+          $ref: '#/components/responses/okSingleDivision'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          description: GET by citation for non-existent citation returns a 404
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          $ref: '#/components/responses/serverError'
+      operationId: lookupByBluebookCitation
+components:
+  schemas:
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
+    Date:
+      description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
+      type: string
+      oneOf:
+      - type: string
+        format: date
+        description: An ISO 8601 date string (e.g., "2025-04-17").
+        example: '2025-12-31'
+      - type: string
+        enum:
+        - Infinity
+        - -Infinity
+        description: Represents positive infinity ("Infinity") or negative infinity ("-Infinity").
+      - type: 'null'
+        description: Represents an unset or not applicable date.
+      example: Infinity
+    DivisionDisplay:
+      description: Minimal subset of Division properties. Useful for building lists and drill downs of Division hierarchies.
+      type: object
+      properties:
+        display_name:
+          type: string
+          example: 'Title 1: Government'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
+        path:
+          type: string
+          example: title_1
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+      required:
+      - display_name
+      - path
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    DivisionUpdate:
+      description: '**(Law Firm and Enterprise plans only)** Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.'
+      type: object
+      properties:
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        law_key:
+          type: string
+          example: FED-CFR
+          description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type.
+        path:
+          type: string
+          example: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+        label:
+          type: string
+          example: section_155_194
+          description: Human-readable identifier for the Division; guaranteed to be unique among its sibling Divisions
+        display_name:
+          type: string
+          example: 'Section 155.194: Catsup'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
+        openlaws_web_url:
+          type: string
+          example: https://static.openlaws.us/laws/fed/cfr/title_21/chapter_i/subchapter_b/part_155/subpart_b/section_155_194
+          description: Static web view provided by OpenLaws for display to customers and use as citations for LLM outputs.
+        effective_date_start:
+          $ref: '#/components/schemas/Date'
+          example: '1993-01-06'
+          description: If the source document and annotations contain a starting effective date, this field will be contain an ISO 8601 date. This date is inclusive.
+        effective_date_end:
+          $ref: '#/components/schemas/Date'
+          example: Infinity
+          description: If the source document and annotations contain an ending effective date, this field will be contain an ISO 8601 date. This date is inclusive.
+        is_repealed:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division is repealed, contingent repealed, or no longer effective.
+        current_as_of:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when the last time the Law was checked for changes.'
+          example: '2025-03-01'
+        updated_at:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division''s source was updated.'
+          example: '1993-01-06'
+        deleted_on:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division was no longer found in the source and removed from OpenLaws.'
+          example: '2024-12-31'
+      required:
+      - jurisdiction_key
+      - law_key
+      - path
+      - effective_date_start
+      - effective_date_end
+      - updated_at
+    Division:
+      description: Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.
+      type: object
+      properties:
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        law_key:
+          type: string
+          example: FED-CFR
+          description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type.
+        label:
+          type: string
+          example: section_155_194
+          description: Human-readable identifier for the Division; guaranteed to be unique among its sibling Divisions
+        path:
+          type: string
+          example: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+        division_type:
+          type: string
+          example: section
+          description: OpenLaws standardization of the Division document type
+        identifier:
+          type:
+          - string
+          - 'null'
+          example: '155.194'
+          description: The source document's identifier
+        range_end_identifier:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: If the Division is part a range, this contains the ending value for the identifier range, e.g., §§ 100 to 200 -> 200 is the range_end_identifier.
+        name:
+          type:
+          - string
+          - 'null'
+          example: Catsup
+          description: The name of the document from the source document.
+        display_name:
+          type: string
+          example: 'Section 155.194: Catsup'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
+        openlaws_web_url:
+          type: string
+          example: https://static.openlaws.us/laws/fed/cfr/title_21/chapter_i/subchapter_b/part_155/subpart_b/section_155_194
+          description: Static web view provided by OpenLaws for display to customers and use as citations for LLM outputs.
+        effective_date:
+          type: string
+          example: 1993-01-06...Infinity
+          description: '(DEPRECATION WARNING: This will be deprecated in favor of effective_date_start and effective_date_end.) If the source document and annotations contain an effective date, this field will be contain the start and end date as a range. Positive and negative infinity indicate the effective date is unbounded.'
+        effective_date_start:
+          allOf:
+          - $ref: '#/components/schemas/Date'
+          - example: '1993-01-06'
+            description: If the source document and annotations contain a starting effective date, this field will be contain an ISO 8601 date. This date is inclusive.
+        effective_date_end:
+          allOf:
+          - $ref: '#/components/schemas/Date'
+          - example: Infinity
+            description: If the source document and annotations contain an ending effective date, this field will be contain an ISO 8601 date. This date is inclusive.
+        aliases:
+          type:
+          - string
+          - 'null'
+          example: ''
+          description: Contains short or common names for the Division
+        plaintext_content:
+          type: string
+          example: "(a) Identity -\n\n    (1) Definition. Catsup, ketchup, or catchup is the food prepared from one or any combination of two or more of the following optional tomato ingredients:\n\n        (i) Tomato concentrate as defined in § 155.191(a)(1), except that lemon juice, concentrated lemon juice, or safe and suitable organic acids may be used in quantities no greater than necessary to adjust the pH, and in compliance with § 155.191(b).\n\n        (ii) The liquid derived from mature tomatoes of the red or reddish varieties Lycopersicum esculentum P. Mill.\n\n        (iii) The liquid obtained from the residue from preparing such tomatoes for canning, consisting of peelings and cores with or without such tomatoes or pieces thereof.\n\n        (iv) The liquid obtained from the residue from partial extraction of juice from such tomatoes.\n    Such liquid is strained so as to exclude skins, seeds, and other coarse or hard substances in accordance with current good manufacturing practice. Prior to straining, food-grade hydrochloric acid may be added to the tomato material in an amount to obtain a pH no lower than 2.0. Such acid is then neutralized with food-grade sodium hydroxide so that the treated tomato material is restored to a pH of 4.2±0.2. The final composition of the food may be adjusted by concentration and/or by the addition of water. The food may contain salt (sodium chloride formed during acid neutralization shall be considered added salt) and is seasoned with ingredients as specified in paragraph (a)(2) of this section. The food is preserved by heat sterilization (canning), refrigeration, or freezing. When sealed in a container to be held at ambient temperatures, it is so processed by heat, before or after sealing, as to prevent spoilage.\n\n    (2) Ingredients. One or any combination of two or more of the following safe and suitable ingredients in each of the following categories is added to the tomato ingredients specified in paragraph (a)(1) of this section:\n\n        (i) Vinegars.\n\n        (ii) Nutritive carbohydrate sweeteners. Such sweeteners if defined in part 168 of this chapter shall be as defined therein.\n\n        (iii) Spices, flavoring, onions, or garlic.\n\n    (3) Labeling.\n\n        (i) The name of the food is “Catsup,” “Ketchup,” or “Catchup.”\n\n        (ii) The following shall be included as part of the name or in close proximity to the name of the food:\n    (*a*) The statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from canning” if the optional tomato ingredient specified in paragraph (a)(1)(iii) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(ii) is present.\n\n    (*b*) The statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from partial extraction of juice” if the optional tomato ingredient specified in paragraph (a)(1)(iv) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(iii) is present.\n\n        (iii) Label declaration. Each of the ingredients used in the food shall be declared on the label as required by the applicable sections of parts 101 and 130 of this chapter; except that the name “tomato concentrate” may be used in lieu of the names “tomato puree,” “tomato pulp,” or “tomato paste” and when tomato concentrates are used, the labeling requirements of § 155.191(a)(3)(ii)(a) and (a)(3)(ii)(b) do not apply.\n\n(b) Quality.\n\n    (1) The standard of quality for catsup is as follows: The consistency of the finished food is such that its flow is not more than 14 centimeters in 30 seconds at 20 °C when tested in a Bostwick Consistometer in the following manner: Check temperature of mixture and adjust to 20±1 °C. The trough must also be at a temperature close to 20 °C. Adjust end-to-end level of Bostwick Consistometer by means of the spirit level placed in trough of instrument. Side-to-side level may be adjusted by means of the built-in spirit level. Transfer sample to the dry sample chamber of the Bostwick Consistometer. Fill the chamber slightly more than level full, avoiding air bubbles as far as possible. Pass a straight edge across top of chamber starting from the gate end to remove excess product. Release gate of instrument by gradual pressure on lever, holding the instrument down at the same time to prevent its movement as the gate is released. Immediately start the stop watch or interval timer, and after 30 seconds read the maximum distance of flow to the nearest 0.1 centimeter. Clean and dry the instrument and repeat the reading on another portion of sample. Do not wash instrument with hot water if it is to be used immediately for the next determination, as this may result in an increase in temperature of the sample. For highest accuracy, the instrument should be maintained at a temperature of 20±1 °C. If readings vary more than 0.2 centimeter, repeat a third time or until satisfactory agreement is obtained. Report the average of two or more readings, excluding any that appear to be abnormal.\n\n    (2) Determine compliance as specified in § 155.3(b).\n\n    (3) If the quality of catsup falls below the standard prescribed in paragraphs (b) (1) and (2) of this section, the label shall bear the general statement of substandard quality specified in § 130.14(a) of this chapter, in the manner and form therein specified, but in lieu of such general statement of substandard quality when the quality of the catsup falls below the standard, the label may bear the alternative statement, “Below Standard in Quality-Low Consistency.”\n\n(c) Fill of container.\n\n    (1) The standard of fill of container for catsup, as determined by the general method for fill of container prescribed in § 130.12(b) of this chapter, is not less than 90 percent of the total capacity except:\n\n        (i) When the food is frozen, or\n\n        (ii) When the food is packaged in individual serving-size packages containing 56.7 grams (2 ounces) or less.\n\n    (2) Determine compliance as specified in § 155.3(b).\n\n    (3) If the catsup falls below the standard of fill prescribed in paragraphs (c) (1) and (2) of this section, the label shall bear the general statement of substandard fill as specified in § 130.14(b) of this chapter, in the manner and form therein specified."
+          description: Plaintext content without rich text formatting and markup to define pincite locations. Suitable for use with LLMs.
+        markdown_content:
+          type: string
+          example: "1.  {{< pincite identifier=\"a\" display=\"a\" >}} *Identity* -\n    1.  {{< pincite identifier=\"a_1\" display=\"1\" >}} *Definition.*  Catsup, ketchup, or catchup is the food prepared from one or any combination of two or more of the following optional tomato ingredients:\n        1.  {{< pincite identifier=\"a_1_i\" display=\"i\" >}} Tomato concentrate as defined in § 155.191(a)(1), except that lemon juice, concentrated lemon juice, or safe and suitable organic acids may be used in quantities no greater than necessary to adjust the pH, and in compliance with § 155.191(b).\n        1.  {{< pincite identifier=\"a_1_ii\" display=\"ii\" >}} The liquid derived from mature tomatoes of the red or reddish varieties *Lycopersicum esculentum* P. Mill.\n        1.  {{< pincite identifier=\"a_1_iii\" display=\"iii\" >}} The liquid obtained from the residue from preparing such tomatoes for canning, consisting of peelings and cores with or without such tomatoes or pieces thereof.\n        1.  {{< pincite identifier=\"a_1_iv\" display=\"iv\" >}} The liquid obtained from the residue from partial extraction of juice from such tomatoes.\n\n            Such liquid is strained so as to exclude skins, seeds, and other coarse or hard substances in accordance with current good manufacturing practice. Prior to straining, food-grade hydrochloric acid may be added to the tomato material in an amount to obtain a pH no lower than 2.0. Such acid is then neutralized with food-grade sodium hydroxide so that the treated tomato material is restored to a pH of 4.2±0.2. The final composition of the food may be adjusted by concentration and/or by the addition of water. The food may contain salt (sodium chloride formed during acid neutralization shall be considered added salt) and is seasoned with ingredients as specified in paragraph (a)(2) of this section. The food is preserved by heat sterilization (canning), refrigeration, or freezing. When sealed in a container to be held at ambient temperatures, it is so processed by heat, before or after sealing, as to prevent spoilage. \n        { .parens-lower-roman }\n    1.  {{< pincite identifier=\"a_2\" display=\"2\" >}} *Ingredients.*  One or any combination of two or more of the following safe and suitable ingredients in each of the following categories is added to the tomato ingredients specified in paragraph (a)(1) of this section:\n        1.  {{< pincite identifier=\"a_2_i\" display=\"i\" >}} Vinegars.\n        1.  {{< pincite identifier=\"a_2_ii\" display=\"ii\" >}} Nutritive carbohydrate sweeteners. Such sweeteners if defined in part 168 of this chapter shall be as defined therein.\n        1.  {{< pincite identifier=\"a_2_iii\" display=\"iii\" >}} Spices, flavoring, onions, or garlic.\n        { .parens-lower-roman }\n    1.  {{< pincite identifier=\"a_3\" display=\"3\" >}} *Labeling.*\n        1.  {{< pincite identifier=\"a_3_i\" display=\"i\" >}} The name of the food is “Catsup,” “Ketchup,” or “Catchup.”\n        1.  {{< pincite identifier=\"a_3_ii\" display=\"ii\" >}} The following shall be included as part of the name or in close proximity to the name of the food:\n\n\n            (*a*) The statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from canning” if the optional tomato ingredient specified in paragraph (a)(1)(iii) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(ii) is present.\n\n\n\n            (*b*) The statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from partial extraction of juice” if the optional tomato ingredient specified in paragraph (a)(1)(iv) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(iii) is present.\n        1.  {{< pincite identifier=\"a_3_iii\" display=\"iii\" >}} *Label declaration.*  Each of the ingredients used in the food shall be declared on the label as required by the applicable sections of parts 101 and 130 of this chapter; except that the name “tomato concentrate” may be used in lieu of the names “tomato puree,” “tomato pulp,” or “tomato paste” and when tomato concentrates are used, the labeling requirements of § 155.191(a)(3)(ii)(*a*) and (a)(3)(ii)(*b*) do not apply.\n        { .parens-lower-roman }\n    { .parens-decimal }\n1.  {{< pincite identifier=\"b\" display=\"b\" >}} *Quality.*\n    1.  {{< pincite identifier=\"b_1\" display=\"1\" >}} The standard of quality for catsup is as follows: The consistency of the finished food is such that its flow is not more than 14 centimeters in 30 seconds at 20 °C when tested in a Bostwick Consistometer in the following manner: Check temperature of mixture and adjust to 20±1 °C. The trough must also be at a temperature close to 20 °C. Adjust end-to-end level of Bostwick Consistometer by means of the spirit level placed in trough of instrument. Side-to-side level may be adjusted by means of the built-in spirit level. Transfer sample to the dry sample chamber of the Bostwick Consistometer. Fill the chamber slightly more than level full, avoiding air bubbles as far as possible. Pass a straight edge across top of chamber starting from the gate end to remove excess product. Release gate of instrument by gradual pressure on lever, holding the instrument down at the same time to prevent its movement as the gate is released. Immediately start the stop watch or interval timer, and after 30 seconds read the maximum distance of flow to the nearest 0.1 centimeter. Clean and dry the instrument and repeat the reading on another portion of sample. Do not wash instrument with hot water if it is to be used immediately for the next determination, as this may result in an increase in temperature of the sample. For highest accuracy, the instrument should be maintained at a temperature of 20±1 °C. If readings vary more than 0.2 centimeter, repeat a third time or until satisfactory agreement is obtained. Report the average of two or more readings, excluding any that appear to be abnormal.\n    1.  {{< pincite identifier=\"b_2\" display=\"2\" >}} Determine compliance as specified in § 155.3(b).\n    1.  {{< pincite identifier=\"b_3\" display=\"3\" >}} If the quality of catsup falls below the standard prescribed in paragraphs (b) (1) and (2) of this section, the label shall bear the general statement of substandard quality specified in § 130.14(a) of this chapter, in the manner and form therein specified, but in lieu of such general statement of substandard quality when the quality of the catsup falls below the standard, the label may bear the alternative statement, “Below Standard in Quality-Low Consistency.”\n    { .parens-decimal }\n1.  {{< pincite identifier=\"c\" display=\"c\" >}} *Fill of container.*\n    1.  {{< pincite identifier=\"c_1\" display=\"1\" >}} The standard of fill of container for catsup, as determined by the general method for fill of container prescribed in § 130.12(b) of this chapter, is not less than 90 percent of the total capacity except:\n        1.  {{< pincite identifier=\"c_1_i\" display=\"i\" >}} When the food is frozen, or\n        1.  {{< pincite identifier=\"c_1_ii\" display=\"ii\" >}} When the food is packaged in individual serving-size packages containing 56.7 grams (2 ounces) or less.\n        { .parens-lower-roman }\n    1.  {{< pincite identifier=\"c_2\" display=\"2\" >}} Determine compliance as specified in § 155.3(b).\n    1.  {{< pincite identifier=\"c_3\" display=\"3\" >}} If the catsup falls below the standard of fill prescribed in paragraphs (c) (1) and (2) of this section, the label shall bear the general statement of substandard fill as specified in § 130.14(b) of this chapter, in the manner and form therein specified.\n    { .parens-decimal }\n{ .parens-lower-alpha }"
+          description: Rich text content in Commonmark with CSS annotations. Meant to be rendered into human-readable HTML along with the OpenLaws Markdown stylesheet.
+        html_content:
+          type: string
+          example: '<ol class="parens-lower-alpha">
+
+            <li><span class=''pincite-display''>a</span> Identity—(1) Definition. Catsup, ketchup, or catchup is the food prepared from one or any combination of two or more of the following optional tomato ingredients:
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> Tomato concentrate as defined in § 155.191(a)(1), except that lemon juice, concentrated lemon juice, or safe and suitable organic acids may be used in quantities no greater than necessary to adjust the pH, and in compliance with § 155.191(b).</li>
+
+            <li><span class=''pincite-display''>ii</span> The liquid derived from mature tomatoes of the red or reddish varieties Lycopersicum esculentum P. Mill.</li>
+
+            <li><span class=''pincite-display''>iii</span> The liquid obtained from the residue from preparing such tomatoes for canning, consisting of peelings and cores with or without such tomatoes or pieces thereof.</li>
+
+            <li><span class=''pincite-display''>iv</span> The liquid obtained from the residue from partial extraction of juice from such tomatoes.</li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            <p>Such liquid is strained so as to exclude skins, seeds, and other coarse or hard substances in accordance with current good manufacturing practice. Prior to straining, food-grade hydrochloric acid may be added to the tomato material in an amount to obtain a pH no lower than 2.0. Such acid is then neutralized with food-grade sodium hydroxide so that the treated tomato material is restored to a pH of 4.2±0.2. The final composition of the food may be adjusted by concentration and/or by the addition of water. The food may contain salt (sodium chloride formed during acid neutralization shall be considered added salt) and is seasoned with ingredients as specified in paragraph (a)(2) of this section. The food is preserved by heat sterilization (canning), refrigeration, or freezing. When sealed in a container to be held at ambient temperatures, it is so processed by heat, before or after sealing, as to prevent spoilage.</p>
+
+            <ol class="parens-decimal">
+
+            <li><span class=''pincite-display''>2</span> Ingredients. One or any combination of two or more of the following safe and suitable ingredients in each of the following categories is added to the tomato ingredients specified in paragraph (a)(1) of this section:
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> Vinegars.</li>
+
+            <li><span class=''pincite-display''>ii</span> Nutritive carbohydrate sweeteners. Such sweeteners if defined in part 168 of this chapter shall be as defined therein.</li>
+
+            <li><span class=''pincite-display''>iii</span> Spices, flavoring, onions, or garlic.</li>
+
+            </ol>
+
+            </li>
+
+            <li><span class=''pincite-display''>3</span> Labeling.
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> The name of the food is “Catsup,” “Ketchup,” or “Catchup.”</li>
+
+            <li><span class=''pincite-display''>ii</span> The following shall be included as part of the name or in close proximity to the name of the food:
+
+            <ol class="parens-lower-alpha">
+
+            <li><span class=''pincite-display''>a</span> The statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from canning” if the optional tomato ingredient specified in paragraph (a)(1)(iii) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(ii) is present.</li>
+
+            <li><span class=''pincite-display''>b</span> The statement “Made from” or “Made in part from,” as the case may be, “residual tomato material from partial extraction of juice” if the optional tomato ingredient specified in paragraph (a)(1)(iv) of this section or tomato concentrate containing the ingredient specified in § 155.191(a)(1)(iii) is present.</li>
+
+            </ol>
+
+            </li>
+
+            <li><span class=''pincite-display''>iii</span> Label declaration. Each of the ingredients used in the food shall be declared on the label as required by the applicable sections of parts 101 and 130 of this chapter; except that the name “tomato concentrate” may be used in lieu of the names “tomato puree,” “tomato pulp,” or “tomato paste” and when tomato concentrates are used, the labeling requirements of § 155.191
+
+            <ol class="parens-lower-alpha">
+
+            <li><span class=''pincite-display''>a</span> (3)(ii)(a) and (a)(3)(ii)(b) do not apply.</li>
+
+            <li><span class=''pincite-display''>b</span> Quality.
+
+            <ol class="parens-decimal">
+
+            <li><span class=''pincite-display''>1</span> The standard of quality for catsup is as follows: The consistency of the finished food is such that its flow is not more than 14 centimeters in 30 seconds at 20 °C when tested in a Bostwick Consistometer in the following manner: Check temperature of mixture and adjust to 20±1 °C. The trough must also be at a temperature close to 20 °C. Adjust end-to-end level of Bostwick Consistometer by means of the spirit level placed in trough of instrument. Side-to-side level may be adjusted by means of the built-in spirit level. Transfer sample to the dry sample chamber of the Bostwick Consistometer. Fill the chamber slightly more than level full, avoiding air bubbles as far as possible. Pass a straight edge across top of chamber starting from the gate end to remove excess product. Release gate of instrument by gradual pressure on lever, holding the instrument down at the same time to prevent its movement as the gate is released. Immediately start the stop watch or interval timer, and after 30 seconds read the maximum distance of flow to the nearest 0.1 centimeter. Clean and dry the instrument and repeat the reading on another portion of sample. Do not wash instrument with hot water if it is to be used immediately for the next determination, as this may result in an increase in temperature of the sample. For highest accuracy, the instrument should be maintained at a temperature of 20±1 °C. If readings vary more than 0.2 centimeter, repeat a third time or until satisfactory agreement is obtained. Report the average of two or more readings, excluding any that appear to be abnormal.</li>
+
+            <li><span class=''pincite-display''>2</span> Determine compliance as specified in § 155.3(b).</li>
+
+            <li><span class=''pincite-display''>3</span> If the quality of catsup falls below the standard prescribed in paragraphs (b) (1) and (2) of this section, the label shall bear the general statement of substandard quality specified in § 130.14(a) of this chapter, in the manner and form therein specified, but in lieu of such general statement of substandard quality when the quality of the catsup falls below the standard, the label may bear the alternative statement, “Below Standard in Quality—Low Consistency.”</li>
+
+            </ol>
+
+            </li>
+
+            <li><span class=''pincite-display''>c</span> Fill of container. (1) The standard of fill of container for catsup, as determined by the general method for fill of container prescribed in § 130.12(b) of this chapter, is not less than 90 percent of the total capacity except:
+
+            <ol class="parens-lower-roman">
+
+            <li><span class=''pincite-display''>i</span> When the food is frozen, or</li>
+
+            <li><span class=''pincite-display''>ii</span> When the food is packaged in individual serving-size packages containing 56.7 grams (2 ounces) or less.
+
+            <ol class="parens-decimal">
+
+            <li><span class=''pincite-display''>2</span> Determine compliance as specified in § 155.3(b).</li>
+
+            <li><span class=''pincite-display''>3</span> If the catsup falls below the standard of fill prescribed in paragraphs (c) (1) and (2) of this section, the label shall bear the general statement of substandard fill as specified in § 130.14(b) of this chapter, in the manner and form therein specified.</li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            </li>
+
+            </ol>
+
+            </li>
+
+            </ol>'
+          description: '**(Law Firm and Enterprise plans only)** Rich text content rendered from the Markdown to HTML with TailwindCSS styling and OpenLaws'' Markdown stylesheet.'
+        annotations:
+          type:
+          - string
+          - 'null'
+          example: '[48 FR 3956, Jan. 28, 1983, as amended at 49 FR 15073, Apr. 17, 1984; 58 FR 2883, Jan. 6, 1993]'
+          description: Annotations and interpretations if available from the official source.
+        display_ancestors:
+          type: array
+          items:
+            $ref: '#/components/schemas/DivisionDisplay'
+          example:
+          - display_name: 'Title 21: Food and Drugs'
+            path: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          - display_name: 'Chapter I: Food and Drug Administration, Department of Health and Human Services'
+            path: title_21.chapter_i
+          - display_name: 'Subchapter B: Food for Human Consumption'
+            path: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          - display_name: 'Part 155: Canned Vegetables'
+            path: title_21.chapter_i.subchapter_b.part_155
+          - display_name: 'Subpart B: Requirements for Specific Standardized Canned Vegetables'
+            path: title_21.chapter_i.subchapter_b.part_155.subpart_b
+          description: '**(Law Firm and Enterprise plans only)** Array of ancestors Divisions with display_name and paths. This can be used to render navigation breadcrumbs or to give LLMs context for the current Division.'
+        display_children:
+          type: array
+          items:
+            $ref: '#/components/schemas/DivisionDisplay'
+          example: []
+          description: '**(Law Firm and Enterprise plans only)** Array of children Divisions with display_name and paths. This can be used to render a list of child Divisions for the current Division.'
+        source_url:
+          type: string
+          example: https://www.ecfr.gov/current/title-21/chapter-I/subchapter-B/part-155/subpart-B/section-155.194
+          description: '**(Law Firm and Enterprise plans only)** Authoritative Source URL for law. Deep-links to the source where supported.'
+        current_as_of:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when the last time the Law was checked for changes.'
+          example: '2025-03-01'
+        updated_at:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division''s source was updated.'
+          example: '1993-01-06'
+        is_repealed:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division is repealed, contingent repealed, or no longer effective.
+        is_reserved:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division identifier and range_end_identifier are reserved by the Jurisdiction.
+        renumbered:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: (Experimental) Contains the new identifier and location where the Division was renumbered to.
+      required:
+      - jurisdiction_key
+      - law_key
+      - label
+      - path
+      - division_type
+      - identifier
+      - range_end_identifier
+      - name
+      - display_name
+      - effective_date_start
+      - effective_date_end
+      - plaintext_content
+      - markdown_content
+      - annotations
+      - display_ancestors
+      - display_children
+      - is_repealed
+      - renumbered
+  parameters:
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+    queryTypeParam:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        default: or
+        enum:
+        - or
+        - and
+        - phrase
+      description: Search type. Default is 'or'.
+    limitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+      description: Maximum number of results to return
+    lawKeyParam:
+      name: law_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED-CFR
+      description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
+    keywordQueryParam:
+      name: query
+      in: query
+      required: true
+      schema:
+        type: string
+        example: apple
+      description: One or more keywords to search by
+    pageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Combines with `limit` to implement cursor-based pagination. This parameter sets the cursor to the next page of data.
+    withFederalParam:
+      name: with_federal
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
+  responses:
+    okArrayOfDivisionUpdates:
+      description: Array of DivisionUpdates
+      headers:
+        link:
+          description: Comma-separated list of RFC-8288 links. The URL will be enclosed by angle brackets. A semicolon will separate the URL from the relationship description. The relationship will be a key-value pair in the form of rel="{{relationship}}". The relationship will either be "first" or "next". This describes which page the related URL will fetch.
+          schema:
+            type: string
+            example: <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page&limit=200>; rel="first", <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page=eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9&limit=200>; rel="next"
+        current-page:
+          description: Page ID for the current page
+          schema:
+            type: string
+            example: eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9
+        page-items:
+          description: Number of items on each page. This matches the limit param.
+          schema:
+            type: integer
+            example: 200
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DivisionUpdate'
+    serverError:
+      description: 500 Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    okSingleDivision:
+      description: Single Division
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Division'
+    okArrayOfDivisions:
+      description: Array of Divisions
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Division'
+    badRequest:
+      description: 400 Bad Request. Please check your jurisdiction and citation format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      description: Authenticate API requests via a bearer token
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-ext-urls: {}

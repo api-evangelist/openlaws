@@ -1,0 +1,174 @@
+openapi: 3.1.0
+info:
+  title: OpenLaws API Documentation Courts API
+  version: 1.0.4
+  description: OpenLaws Legal Data API
+  contact:
+    name: OpenLaws PBC
+    url: https://openlaws.us/api
+    email: team@openlaws.us
+  license:
+    name: Commercial
+    url: https://openlaws.us/terms
+servers:
+- url: https://api.openlaws.us
+security:
+- bearerAuth: []
+tags:
+- name: Courts
+  description: Courts issue Opinions and belong to a Jurisdiction.
+paths:
+  /api/v1/jurisdictions/{jurisdiction_key}/courts:
+    get:
+      summary: Get Courts by Jurisdiction
+      description: Lists all the active and inactive courts for a Jurisdiction. Note that federal bankruptcy courts are separate from federal courts.
+      tags:
+      - Courts
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      responses:
+        '200':
+          description: List Courts by Jurisdiction
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Court'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getCourtsByJurisdiction
+  /api/v1/jurisdictions/{jurisdiction_key}/courts/{court_key}:
+    get:
+      summary: Get single Court
+      description: Returns a single court identified by the court_key. Court key is also the unique identifier in the CourtListener data set.
+      tags:
+      - Courts
+      parameters:
+      - $ref: '#/components/parameters/jurisdictionKeyParam'
+      - $ref: '#/components/parameters/courtKeyParam'
+      responses:
+        '200':
+          description: Get one Court by courtKey
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Court'
+        '400':
+          $ref: '#/components/responses/badRequest'
+        '401':
+          $ref: '#/components/responses/unauthorized'
+        '404':
+          $ref: '#/components/responses/notFound'
+      operationId: getCourt
+components:
+  responses:
+    badRequest:
+      description: 400 Bad Request. Please check your jurisdiction and citation format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    courtKeyParam:
+      name: court_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: scotus
+      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+  schemas:
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    Court:
+      description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
+      type: object
+      properties:
+        key:
+          type: string
+          example: scotus
+          description: Unique identifier for the court
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        parent_court_key:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: Parent court key if applicable
+        name:
+          type: string
+          example: Supreme Court of the United States
+        short_name:
+          type: string
+          example: Supreme Court
+        abbreviation:
+          type: string
+          example: SCOTUS
+        start_date:
+          allOf:
+          - $ref: '#/components/schemas/NullableDate'
+          - example: '1789-09-24'
+        end_date:
+          allOf:
+          - $ref: '#/components/schemas/NullableDate'
+          - example: null
+  securitySchemes:
+    bearerAuth:
+      description: Authenticate API requests via a bearer token
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+x-ext-urls: {}
