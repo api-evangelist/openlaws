@@ -1,0 +1,22 @@
+{
+  "provider": "openlaws",
+  "sources": [
+    "openlaws-courts-api-openapi.yml",
+    "openlaws-jurisdictions-api-openapi.yml",
+    "openlaws-law-divisions-api-openapi.yml",
+    "openlaws-laws-api-openapi.yml",
+    "openlaws-opinions-api-openapi.yml"
+  ],
+  "outputs": [
+    "openlaws-courts-api-openapi.yml",
+    "openlaws-jurisdictions-api-openapi.yml",
+    "openlaws-law-divisions-api-openapi.yml",
+    "openlaws-laws-api-openapi.yml",
+    "openlaws-opinions-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}
