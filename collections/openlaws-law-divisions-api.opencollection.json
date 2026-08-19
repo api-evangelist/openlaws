@@ -1,0 +1,283 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "OpenLaws API Documentation Courts Law Divisions API",
+    "version": "1.0.4"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Law Divisions",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get a specific Law's Root Divisions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/:law_key/divisions",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "law_key",
+                "value": "",
+                "type": "path",
+                "description": "A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character."
+              }
+            ]
+          },
+          "docs": "Root divisions are top of the document hierarchy for a law. Typically, these documents are Titles or Agency document types."
+        },
+        {
+          "info": {
+            "name": "Get Division by Jurisdiction and OpenLaws path",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/:law_key/divisions/:path",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "law_key",
+                "value": "",
+                "type": "path",
+                "description": "A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character."
+              },
+              {
+                "name": "path",
+                "value": "",
+                "type": "path",
+                "description": "An OpenLaws field that describes the Division's relationship to other documents in the law's hierarchy. Combined with the law_key and effective_date_* fields this creates a unique key for Divisions."
+              }
+            ]
+          },
+          "docs": "A precise way of retrieving one Division object with its unique path"
+        },
+        {
+          "info": {
+            "name": "(Enterprise Only) Get a list of Divisions that were created or updated after a date.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/:law_key/divisions/updates",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "law_key",
+                "value": "",
+                "type": "path",
+                "description": "A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character."
+              },
+              {
+                "name": "updated_after",
+                "value": "",
+                "type": "query",
+                "description": "Return list of Divisions updated AFTER this ISO Date (UTC). Date must be within 90 days of the current date."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Combines with `limit` to implement cursor-based pagination. This parameter sets the cursor to the next page of data."
+              }
+            ]
+          },
+          "docs": "This query returns a list of DivisionUpdate objects which are a lightweight subset of the Division. DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc8288)."
+        },
+        {
+          "info": {
+            "name": "(Enterprise Only) Get a list of Divisions that were created or updated after a date within a subtree of Divisions.",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/:law_key/divisions/:starting_path/updates",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "law_key",
+                "value": "",
+                "type": "path",
+                "description": "A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character."
+              },
+              {
+                "name": "updated_after",
+                "value": "",
+                "type": "query",
+                "description": "Return list of Divisions updated AFTER this ISO Date (UTC). Date must be within 90 days of the current date."
+              },
+              {
+                "name": "starting_path",
+                "value": "",
+                "type": "path",
+                "description": "The starting path to traverse down to find updated Divisions."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query",
+                "description": "Combines with `limit` to implement cursor-based pagination. This parameter sets the cursor to the next page of data."
+              }
+            ]
+          },
+          "docs": "This query returns a list of DivisionUpdate objects within the Division hierarchy beginning at starting_path. DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc82"
+        },
+        {
+          "info": {
+            "name": "Keyword Search within a Jurisdiction",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/search",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "query",
+                "value": "",
+                "type": "query",
+                "description": "One or more keywords to search by"
+              },
+              {
+                "name": "type",
+                "value": "",
+                "type": "query",
+                "description": "Search type. Default is 'or'."
+              },
+              {
+                "name": "with_federal",
+                "value": "",
+                "type": "query",
+                "description": "When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return"
+              }
+            ]
+          },
+          "docs": "Heuristic keyword search within a specific Jurisdiction (and optionally, federal Laws at the same time with `with_federal`). The search scope will include statutes, rules, regulations, and constitutions. See \"Keyword Search Case Opinions\" for case law search."
+        },
+        {
+          "info": {
+            "name": "Keyword Search within a Jurisdiction and a specific law_key for that Jurisdiction",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/:law_key/search",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "law_key",
+                "value": "",
+                "type": "path",
+                "description": "A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character."
+              },
+              {
+                "name": "query",
+                "value": "",
+                "type": "query",
+                "description": "One or more keywords to search by"
+              },
+              {
+                "name": "type",
+                "value": "",
+                "type": "query",
+                "description": "Search type. Default is 'or'."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return"
+              }
+            ]
+          },
+          "docs": "Heuristic keyword search within a specific Jurisdiction and a specific type of law for that jurisdiction, ex: Jurisdiction=TX and law_key=TX-CONST (constitution)"
+        },
+        {
+          "info": {
+            "name": "Lookup by Jurisdiction and Bluebook legal citation for a statute, regulation, or constitution",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws/citations",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "query",
+                "value": "",
+                "type": "query",
+                "description": "Bluebook legal citation for a statute, code, rule, regulation, or constitution"
+              }
+            ]
+          },
+          "docs": "We highly recommend this method of looking up Divisions when legal citations are available because it is the most precise way to identify relevant documents."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

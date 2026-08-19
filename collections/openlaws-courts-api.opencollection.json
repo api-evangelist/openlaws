@@ -1,0 +1,68 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "OpenLaws API Documentation Courts API",
+    "version": "1.0.4"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Courts",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get Courts by Jurisdiction",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/courts",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              }
+            ]
+          },
+          "docs": "Lists all the active and inactive courts for a Jurisdiction. Note that federal bankruptcy courts are separate from federal courts."
+        },
+        {
+          "info": {
+            "name": "Get single Court",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/courts/:court_key",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "court_key",
+                "value": "",
+                "type": "path",
+                "description": "Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values."
+              }
+            ]
+          },
+          "docs": "Returns a single court identified by the court_key. Court key is also the unique identifier in the CourtListener data set."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

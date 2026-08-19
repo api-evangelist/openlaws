@@ -1,0 +1,110 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "OpenLaws API Documentation Courts Opinions API",
+    "version": "1.0.4"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Opinions",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Keyword Search Case Opinions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/opinions/search",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "query",
+                "value": "",
+                "type": "query",
+                "description": "One or more keywords to search by"
+              },
+              {
+                "name": "type",
+                "value": "",
+                "type": "query",
+                "description": "Search type. Default is 'or'."
+              },
+              {
+                "name": "with_federal",
+                "value": "",
+                "type": "query",
+                "description": "When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope."
+              },
+              {
+                "name": "filing_start_date",
+                "value": "",
+                "type": "query",
+                "description": "Filter opinions to those that were filed on or after this ISO date."
+              },
+              {
+                "name": "filing_end_date",
+                "value": "",
+                "type": "query",
+                "description": "Filter opinions to those that were filed before or on this ISO date."
+              },
+              {
+                "name": "court_keys",
+                "value": "",
+                "type": "query",
+                "description": "Comma delimited list of court_keys. See GET /jurisdictions/{jurisdiction_key}/courts for valid court_keys. For the FED jurisdiction, 'first_circuit'...'eleventh_circuit', 'dc_circuit', and 'federal_circuit' are also valid values which expand to all courts in that circuit."
+              },
+              {
+                "name": "limit",
+                "value": "",
+                "type": "query",
+                "description": "Maximum number of results to return"
+              }
+            ]
+          },
+          "docs": "BM25 keyword search of case opinion text."
+        },
+        {
+          "info": {
+            "name": "Lookup Case Opinion by Jurisdiction and Bluebook legal citation for a case",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/opinions/citations",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              },
+              {
+                "name": "query",
+                "value": "",
+                "type": "query",
+                "description": "Bluebook legal citation for a case"
+              }
+            ]
+          },
+          "docs": "Long form with parties or short form of case citations (volume-number reporter-abbreviation first-page-number) will work."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

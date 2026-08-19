@@ -1,0 +1,54 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "OpenLaws API Documentation Courts Laws API",
+    "version": "1.0.4"
+  },
+  "request": {
+    "auth": {
+      "type": "bearer",
+      "token": "{{bearerToken}}"
+    }
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Laws",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Get Laws by Jurisdiction",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/jurisdictions/:jurisdiction_key/laws",
+            "params": [
+              {
+                "name": "jurisdiction_key",
+                "value": "",
+                "type": "path",
+                "description": "Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories."
+              }
+            ]
+          },
+          "docs": "Jurisdictions, i.e., California, Texas, Federal, contain many laws, e.g.,  statutes, regulations, court rules, and a constitution."
+        },
+        {
+          "info": {
+            "name": "Get all Laws",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "https://api.openlaws.us/api/v1/laws"
+          },
+          "docs": "Laws in OpenLaws represent statutes, rules and regulations, and constitutions"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

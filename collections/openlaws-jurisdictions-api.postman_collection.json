@@ -1,0 +1,168 @@
+{
+  "item": [
+    {
+      "id": "8dcd26a3-fee2-4193-b7ff-f85701c82d8b",
+      "name": "Jurisdictions",
+      "description": {
+        "content": "All data (statutes, regulations, caselaw opinions) in OpenLaws are organized into jurisdictions. This allows you to scope searches and lookups to a specific state or federal jurisdiction (or both).",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "0de40ac0-b50c-4ac0-9b30-a1fe382d230d",
+          "name": "List all Jurisdictions",
+          "request": {
+            "name": "List all Jurisdictions",
+            "description": {
+              "content": "Returns all valid jurisdictions, coverage data, and metadata for OpenLaws Jurisdictions",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "api",
+                "v1",
+                "jurisdictions"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": null
+          },
+          "response": [
+            {
+              "id": "d0399120-aac0-4868-9b18-c4eb015a35a3",
+              "name": "GET jurisdictions returns all jurisdictions",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "jurisdictions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"key\": \"CA\",\n  \"name\": \"California\",\n  \"laws\": [\n    {\n      \"key\": \"CA-RR\",\n      \"jurisdiction_key\": \"CA\",\n      \"law_type\": \"regulations\",\n      \"state\": \"CA\",\n      \"name\": \"California Code of Regulations\",\n      \"aliases\": \"string\",\n      \"features\": [\n        {\n          \"name\": \"string\",\n          \"available\": false\n        },\n        {\n          \"name\": \"string\",\n          \"available\": false\n        }\n      ]\n    },\n    {\n      \"key\": \"CA-RR\",\n      \"jurisdiction_key\": \"CA\",\n      \"law_type\": \"regulations\",\n      \"state\": \"CA\",\n      \"name\": \"California Code of Regulations\",\n      \"aliases\": \"string\",\n      \"features\": [\n        {\n          \"name\": \"string\",\n          \"available\": true\n        },\n        {\n          \"name\": \"string\",\n          \"available\": false\n        }\n      ]\n    }\n  ],\n  \"state\": \"CA\",\n  \"abbreviation\": \"Cal.\",\n  \"postal_abbreviation\": \"CA\",\n  \"courts\": [\n    {\n      \"key\": \"scotus\",\n      \"jurisdiction_key\": \"FED\",\n      \"parent_court_key\": \"string\",\n      \"name\": \"Supreme Court of the United States\",\n      \"short_name\": \"Supreme Court\",\n      \"abbreviation\": \"SCOTUS\",\n      \"start_date\": \"1776-04-01\",\n      \"end_date\": \"1776-04-01\"\n    },\n    {\n      \"key\": \"scotus\",\n      \"jurisdiction_key\": \"FED\",\n      \"parent_court_key\": \"string\",\n      \"name\": \"Supreme Court of the United States\",\n      \"short_name\": \"Supreme Court\",\n      \"abbreviation\": \"SCOTUS\",\n      \"start_date\": \"1776-04-01\",\n      \"end_date\": \"1776-04-01\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b8f21fa3-6db9-4c27-bab3-bd861c17c420",
+              "name": "401 Unauthorized. Please check your API Bearer token.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "api",
+                    "v1",
+                    "jurisdictions"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: bearer",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "Bearer <token>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": 404,\n  \"title\": \"string\",\n  \"instance\": \"string\",\n  \"type\": \"string\",\n  \"details\": \"string\",\n  \"errors\": [\n    \"string\",\n    \"string\"\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "https://api.openlaws.us",
+      "key": "baseUrl"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}"
+      }
+    ]
+  },
+  "info": {
+    "_postman_id": "4a0ae6bf-35b2-4724-8e48-8e24678f0bcb",
+    "name": "OpenLaws API Documentation Courts Jurisdictions API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "OpenLaws Legal Data API\n\nContact Support:\n Name: OpenLaws PBC\n Email: team@openlaws.us",
+      "type": "text/plain"
+    }
+  }
+}
