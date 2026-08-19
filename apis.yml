@@ -46,7 +46,7 @@ created: '2025-03-01'
 modified: '2026-05-21'
 url: >-
   https://raw.githubusercontent.com/api-evangelist/openlaws/refs/heads/main/apis.yml
-specificationVersion: '0.20'
+specificationVersion: '0.23'
 apis:
 - aid: openlaws:openlaws-courts-api
   name: OpenLaws Courts API
