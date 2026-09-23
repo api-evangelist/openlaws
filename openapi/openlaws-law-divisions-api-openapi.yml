@@ -1,6 +1,6 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
-  title: OpenLaws API Documentation Courts Law Divisions API
+  title: OpenLaws API Documentation Law Divisions API
   version: 1.0.4
   description: OpenLaws Legal Data API
   contact:
@@ -81,7 +81,7 @@ paths:
       operationId: getDivsisionsByPath
   /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/updates:
     get:
-      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a date.
+      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a…
       description: This query returns a list of DivisionUpdate objects which are a lightweight subset of the Division. DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc8288).
       tags:
       - Law Divisions
@@ -117,7 +117,7 @@ paths:
       operationId: getDivisionsUpdatedAfter
   /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/divisions/{starting_path}/updates:
     get:
-      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a date within a subtree of Divisions.
+      summary: (Enterprise Only) Get a list of Divisions that were created or updated after a…
       description: This query returns a list of DivisionUpdate objects within the Division hierarchy beginning at starting_path. DivisionUpdates contain the law_key, path, and effective dates to identify Division which can be queried further for changes. Note that changes to Divisions may not be material. For example, the addition of whitespace or correction of a minor typo from the source text is considered an update. Pagination is supported using RFC-8288 HTTP Headers (https://datatracker.ietf.org/doc/html/rfc8288).
       tags:
       - Law Divisions
@@ -190,7 +190,7 @@ paths:
       operationId: keywordSearchDivisionWithinJurisdiction
   /api/v1/jurisdictions/{jurisdiction_key}/laws/{law_key}/search:
     get:
-      summary: Keyword Search within a Jurisdiction and a specific law_key for that Jurisdiction
+      summary: Keyword Search within a Jurisdiction and a specific law_key for that…
       description: 'Heuristic keyword search within a specific Jurisdiction and a specific type of law for that jurisdiction, ex: Jurisdiction=TX and law_key=TX-CONST (constitution)'
       tags:
       - Law Divisions
@@ -232,7 +232,7 @@ paths:
       operationId: keywordSearchDivisionWithinLaw
   /api/v1/jurisdictions/{jurisdiction_key}/laws/citations:
     get:
-      summary: Lookup by Jurisdiction and Bluebook legal citation for a statute, regulation, or constitution
+      summary: Lookup by Jurisdiction and Bluebook legal citation for a statute, regulation…
       description: We highly recommend this method of looking up Divisions when legal citations are available because it is the most precise way to identify relevant documents.
       tags:
       - Law Divisions
@@ -263,13 +263,6 @@ paths:
       operationId: lookupByBluebookCitation
 components:
   schemas:
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
     Date:
       description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
       type: string
@@ -286,104 +279,13 @@ components:
       - type: 'null'
         description: Represents an unset or not applicable date.
       example: Infinity
-    DivisionDisplay:
-      description: Minimal subset of Division properties. Useful for building lists and drill downs of Division hierarchies.
-      type: object
-      properties:
-        display_name:
-          type: string
-          example: 'Title 1: Government'
-          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
-        path:
-          type: string
-          example: title_1
-          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
-      required:
-      - display_name
-      - path
-    Error:
-      description: RFC9457 Problem Details
-      type: object
-      properties:
-        status:
-          type: integer
-          example: 404
-        title:
-          type: string
-        instance:
-          type: string
-        type:
-          type: string
-        details:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-      required:
-      - status
-      - title
-    DivisionUpdate:
-      description: '**(Law Firm and Enterprise plans only)** Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.'
-      type: object
-      properties:
-        jurisdiction_key:
-          type: string
-          example: FED
-          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
-        law_key:
-          type: string
-          example: FED-CFR
-          description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type.
-        path:
-          type: string
-          example: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
-          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
-        label:
-          type: string
-          example: section_155_194
-          description: Human-readable identifier for the Division; guaranteed to be unique among its sibling Divisions
-        display_name:
-          type: string
-          example: 'Section 155.194: Catsup'
-          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
-        openlaws_web_url:
-          type: string
-          example: https://static.openlaws.us/laws/fed/cfr/title_21/chapter_i/subchapter_b/part_155/subpart_b/section_155_194
-          description: Static web view provided by OpenLaws for display to customers and use as citations for LLM outputs.
-        effective_date_start:
-          $ref: '#/components/schemas/Date'
-          example: '1993-01-06'
-          description: If the source document and annotations contain a starting effective date, this field will be contain an ISO 8601 date. This date is inclusive.
-        effective_date_end:
-          $ref: '#/components/schemas/Date'
-          example: Infinity
-          description: If the source document and annotations contain an ending effective date, this field will be contain an ISO 8601 date. This date is inclusive.
-        is_repealed:
-          type:
-          - boolean
-          - 'null'
-          example: null
-          description: (Experimental) Whether the Division is repealed, contingent repealed, or no longer effective.
-        current_as_of:
-          $ref: '#/components/schemas/NullableDate'
-          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when the last time the Law was checked for changes.'
-          example: '2025-03-01'
-        updated_at:
-          $ref: '#/components/schemas/NullableDate'
-          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division''s source was updated.'
-          example: '1993-01-06'
-        deleted_on:
-          $ref: '#/components/schemas/NullableDate'
-          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division was no longer found in the source and removed from OpenLaws.'
-          example: '2024-12-31'
-      required:
-      - jurisdiction_key
-      - law_key
-      - path
-      - effective_date_start
-      - effective_date_end
-      - updated_at
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
     Division:
       description: Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.
       type: object
@@ -649,6 +551,104 @@ components:
       - display_children
       - is_repealed
       - renumbered
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    DivisionUpdate:
+      description: '**(Law Firm and Enterprise plans only)** Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.'
+      type: object
+      properties:
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        law_key:
+          type: string
+          example: FED-CFR
+          description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type.
+        path:
+          type: string
+          example: title_21.chapter_i.subchapter_b.part_155.subpart_b.section_155_194
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+        label:
+          type: string
+          example: section_155_194
+          description: Human-readable identifier for the Division; guaranteed to be unique among its sibling Divisions
+        display_name:
+          type: string
+          example: 'Section 155.194: Catsup'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
+        openlaws_web_url:
+          type: string
+          example: https://static.openlaws.us/laws/fed/cfr/title_21/chapter_i/subchapter_b/part_155/subpart_b/section_155_194
+          description: Static web view provided by OpenLaws for display to customers and use as citations for LLM outputs.
+        effective_date_start:
+          $ref: '#/components/schemas/Date'
+          example: '1993-01-06'
+          description: If the source document and annotations contain a starting effective date, this field will be contain an ISO 8601 date. This date is inclusive.
+        effective_date_end:
+          $ref: '#/components/schemas/Date'
+          example: Infinity
+          description: If the source document and annotations contain an ending effective date, this field will be contain an ISO 8601 date. This date is inclusive.
+        is_repealed:
+          type:
+          - boolean
+          - 'null'
+          example: null
+          description: (Experimental) Whether the Division is repealed, contingent repealed, or no longer effective.
+        current_as_of:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when the last time the Law was checked for changes.'
+          example: '2025-03-01'
+        updated_at:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division''s source was updated.'
+          example: '1993-01-06'
+        deleted_on:
+          $ref: '#/components/schemas/NullableDate'
+          description: '**(Law Firm and Enterprise plans only)** The ISO 8601 date of when this Division was no longer found in the source and removed from OpenLaws.'
+          example: '2024-12-31'
+      required:
+      - jurisdiction_key
+      - law_key
+      - path
+      - effective_date_start
+      - effective_date_end
+      - updated_at
+    DivisionDisplay:
+      description: Minimal subset of Division properties. Useful for building lists and drill downs of Division hierarchies.
+      type: object
+      properties:
+        display_name:
+          type: string
+          example: 'Title 1: Government'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
+        path:
+          type: string
+          example: title_1
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+      required:
+      - display_name
+      - path
   parameters:
     jurisdictionKeyParam:
       name: jurisdiction_key
@@ -658,27 +658,6 @@ components:
         type: string
         example: FED
       description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
-    queryTypeParam:
-      name: type
-      in: query
-      required: false
-      schema:
-        type: string
-        default: or
-        enum:
-        - or
-        - and
-        - phrase
-      description: Search type. Default is 'or'.
-    limitParam:
-      name: limit
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-        default: 10
-      description: Maximum number of results to return
     lawKeyParam:
       name: law_key
       in: path
@@ -695,6 +674,15 @@ components:
         type: string
         example: apple
       description: One or more keywords to search by
+    limitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+      description: Maximum number of results to return
     pageParam:
       name: page
       in: query
@@ -710,6 +698,18 @@ components:
         type: boolean
         default: false
       description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
+    queryTypeParam:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        default: or
+        enum:
+        - or
+        - and
+        - phrase
+      description: Search type. Default is 'or'.
   responses:
     okArrayOfDivisionUpdates:
       description: Array of DivisionUpdates
@@ -735,30 +735,18 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/DivisionUpdate'
-    serverError:
-      description: 500 Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     unauthorized:
       description: 401 Unauthorized. Please check your API Bearer token.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    notFound:
-      description: 404 Not Found
+    serverError:
+      description: 500 Internal Server Error
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    okSingleDivision:
-      description: Single Division
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Division'
     okArrayOfDivisions:
       description: Array of Divisions
       content:
@@ -767,6 +755,18 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/Division'
+    okSingleDivision:
+      description: Single Division
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Division'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     badRequest:
       description: 400 Bad Request. Please check your jurisdiction and citation format.
       content:

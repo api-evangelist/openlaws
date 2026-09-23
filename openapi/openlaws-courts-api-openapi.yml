@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.2.0
 info:
   title: OpenLaws API Documentation Courts API
   version: 1.0.4
@@ -64,7 +64,30 @@ paths:
           $ref: '#/components/responses/notFound'
       operationId: getCourt
 components:
+  parameters:
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+    courtKeyParam:
+      name: court_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: scotus
+      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
   responses:
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     badRequest:
       description: 400 Bad Request. Please check your jurisdiction and citation format.
       content:
@@ -77,59 +100,7 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    unauthorized:
-      description: 401 Unauthorized. Please check your API Bearer token.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-  parameters:
-    courtKeyParam:
-      name: court_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: scotus
-      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
-    jurisdictionKeyParam:
-      name: jurisdiction_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: FED
-      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
   schemas:
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
-    Error:
-      description: RFC9457 Problem Details
-      type: object
-      properties:
-        status:
-          type: integer
-          example: 404
-        title:
-          type: string
-        instance:
-          type: string
-        type:
-          type: string
-        details:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-      required:
-      - status
-      - title
     Court:
       description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
       type: object
@@ -165,6 +136,35 @@ components:
           allOf:
           - $ref: '#/components/schemas/NullableDate'
           - example: null
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
   securitySchemes:
     bearerAuth:
       description: Authenticate API requests via a bearer token

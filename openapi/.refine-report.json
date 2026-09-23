@@ -1,11 +1,7 @@
 {
   "provider": "openlaws",
   "sources": [
-    "openlaws-courts-api-openapi.yml",
-    "openlaws-jurisdictions-api-openapi.yml",
-    "openlaws-law-divisions-api-openapi.yml",
-    "openlaws-laws-api-openapi.yml",
-    "openlaws-opinions-api-openapi.yml"
+    "_original/openlaws-openapi.json"
   ],
   "outputs": [
     "openlaws-courts-api-openapi.yml",
@@ -17,6 +13,18 @@
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "1 archived document(s) dropped as subsets of other archived documents",
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "openlaws-openapi.json: upgraded openapi 3.1.0 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "_original/openlaws-openapi.yml: archived document superseded by a larger archived document",
+    "openlaws-courts-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "openlaws-jurisdictions-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "openlaws-law-divisions-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "openlaws-laws-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "openlaws-opinions-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }

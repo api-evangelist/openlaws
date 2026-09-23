@@ -1,0 +1,1 @@
+{"resource":"https://mcp.openlaws.us/mcp","authorization_servers":["https://mcp.openlaws.us"],"scopes_supported":["law:read"],"bearer_methods_supported":["header"]}
