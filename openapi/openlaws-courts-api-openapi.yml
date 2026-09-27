@@ -64,24 +64,13 @@ paths:
           $ref: '#/components/responses/notFound'
       operationId: getCourt
 components:
-  parameters:
-    jurisdictionKeyParam:
-      name: jurisdiction_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: FED
-      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
-    courtKeyParam:
-      name: court_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: scotus
-      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
   responses:
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     unauthorized:
       description: 401 Unauthorized. Please check your API Bearer token.
       content:
@@ -90,12 +79,6 @@ components:
             $ref: '#/components/schemas/Error'
     badRequest:
       description: 400 Bad Request. Please check your jurisdiction and citation format.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    notFound:
-      description: 404 Not Found
       content:
         application/json:
           schema:
@@ -136,6 +119,13 @@ components:
           allOf:
           - $ref: '#/components/schemas/NullableDate'
           - example: null
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
     Error:
       description: RFC9457 Problem Details
       type: object
@@ -158,13 +148,23 @@ components:
       required:
       - status
       - title
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
+  parameters:
+    courtKeyParam:
+      name: court_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: scotus
+      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
   securitySchemes:
     bearerAuth:
       description: Authenticate API requests via a bearer token

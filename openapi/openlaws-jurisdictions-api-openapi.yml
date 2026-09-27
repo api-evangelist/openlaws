@@ -35,22 +35,7 @@ paths:
           $ref: '#/components/responses/unauthorized'
       operationId: listJurisdictions
 components:
-  responses:
-    unauthorized:
-      description: 401 Unauthorized. Please check your API Bearer token.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
-    LawFeature:
-      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
-      type: object
-      properties:
-        name:
-          type: string
-        available:
-          type: boolean
     Court:
       description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
       type: object
@@ -145,6 +130,14 @@ components:
       - key
       - name
       - laws
+    LawFeature:
+      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
+      type: object
+      properties:
+        name:
+          type: string
+        available:
+          type: boolean
     Law:
       type: object
       description: Laws represent one type of codified or administrative law for a specific Jurisdiction. Laws contain Divisions. Please see the Court and Opinion schemas for case law.
@@ -190,6 +183,13 @@ components:
       - 'null'
       format: date
       example: '1776-04-01'
+  responses:
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   securitySchemes:
     bearerAuth:
       description: Authenticate API requests via a bearer token
