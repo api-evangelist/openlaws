@@ -47,28 +47,15 @@ paths:
           $ref: '#/components/responses/unauthorized'
       operationId: getLaws
 components:
-  responses:
-    notFound:
-      description: 404 Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    okArrayOfLaws:
-      description: Array of Laws
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/Law'
-    unauthorized:
-      description: 401 Unauthorized. Please check your API Bearer token.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
+    LawFeature:
+      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
+      type: object
+      properties:
+        name:
+          type: string
+        available:
+          type: boolean
     Error:
       description: RFC9457 Problem Details
       type: object
@@ -91,14 +78,6 @@ components:
       required:
       - status
       - title
-    LawFeature:
-      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
-      type: object
-      properties:
-        name:
-          type: string
-        available:
-          type: boolean
     Law:
       type: object
       description: Laws represent one type of codified or administrative law for a specific Jurisdiction. Laws contain Divisions. Please see the Court and Opinion schemas for case law.
@@ -137,6 +116,27 @@ components:
       - key
       - jurisdiction_key
       - law_type
+  responses:
+    okArrayOfLaws:
+      description: Array of Laws
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Law'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   parameters:
     jurisdictionKeyParam:
       name: jurisdiction_key

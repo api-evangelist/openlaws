@@ -106,6 +106,44 @@ paths:
           $ref: '#/components/responses/serverError'
       operationId: lookupOpinionByBluebookCitation
 components:
+  parameters:
+    queryTypeParam:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        default: or
+        enum:
+        - or
+        - and
+        - phrase
+      description: Search type. Default is 'or'.
+    withFederalParam:
+      name: with_federal
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+    limitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+      description: Maximum number of results to return
   schemas:
     Opinion:
       description: Court opinions that resembles the CourtListener schema but is modeled to be focused on the Opinion as the central concept.
@@ -717,6 +755,39 @@ components:
       - case_name
       - jurisdiction_key
       - court
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    DateTime:
+      description: ISO 8601 DateTime
+      type: string
+      format: date-time
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
     Court:
       description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
       type: object
@@ -752,40 +823,15 @@ components:
           allOf:
           - $ref: '#/components/schemas/NullableDate'
           - example: null
-    DateTime:
-      description: ISO 8601 DateTime
-      type: string
-      format: date-time
-    Error:
-      description: RFC9457 Problem Details
-      type: object
-      properties:
-        status:
-          type: integer
-          example: 404
-        title:
-          type: string
-        instance:
-          type: string
-        type:
-          type: string
-        details:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-      required:
-      - status
-      - title
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
   responses:
+    okArrayOfOpinions:
+      description: Array of Opinions
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Opinion'
     serverError:
       description: 500 Internal Server Error
       content:
@@ -798,64 +844,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    notFound:
-      description: 404 Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
     unauthorized:
       description: 401 Unauthorized. Please check your API Bearer token.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
-    okArrayOfOpinions:
-      description: Array of Opinions
+    notFound:
+      description: 404 Not Found
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/Opinion'
-  parameters:
-    queryTypeParam:
-      name: type
-      in: query
-      required: false
-      schema:
-        type: string
-        default: or
-        enum:
-        - or
-        - and
-        - phrase
-      description: Search type. Default is 'or'.
-    withFederalParam:
-      name: with_federal
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
-    jurisdictionKeyParam:
-      name: jurisdiction_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: FED
-      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
-    limitParam:
-      name: limit
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-        default: 10
-      description: Maximum number of results to return
+            $ref: '#/components/schemas/Error'
   securitySchemes:
     bearerAuth:
       description: Authenticate API requests via a bearer token

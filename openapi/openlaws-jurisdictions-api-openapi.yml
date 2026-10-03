@@ -36,63 +36,14 @@ paths:
       operationId: listJurisdictions
 components:
   schemas:
-    Court:
-      description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
+    LawFeature:
+      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
       type: object
       properties:
-        key:
-          type: string
-          example: scotus
-          description: Unique identifier for the court
-        jurisdiction_key:
-          type: string
-          example: FED
-          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
-        parent_court_key:
-          type:
-          - string
-          - 'null'
-          example: null
-          description: Parent court key if applicable
         name:
           type: string
-          example: Supreme Court of the United States
-        short_name:
-          type: string
-          example: Supreme Court
-        abbreviation:
-          type: string
-          example: SCOTUS
-        start_date:
-          allOf:
-          - $ref: '#/components/schemas/NullableDate'
-          - example: '1789-09-24'
-        end_date:
-          allOf:
-          - $ref: '#/components/schemas/NullableDate'
-          - example: null
-    Error:
-      description: RFC9457 Problem Details
-      type: object
-      properties:
-        status:
-          type: integer
-          example: 404
-        title:
-          type: string
-        instance:
-          type: string
-        type:
-          type: string
-        details:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-      required:
-      - status
-      - title
+        available:
+          type: boolean
     Jurisdiction:
       type: object
       description: Jurisdictions are the highest abstraction in OpenLaws. They contain codified Laws, Courts, Reporters. Federal is a special case and contains several "sub-Jurisdictions" due to the government's scale and complexity.
@@ -130,14 +81,35 @@ components:
       - key
       - name
       - laws
-    LawFeature:
-      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
+    Error:
+      description: RFC9457 Problem Details
       type: object
       properties:
-        name:
+        status:
+          type: integer
+          example: 404
+        title:
           type: string
-        available:
-          type: boolean
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
     Law:
       type: object
       description: Laws represent one type of codified or administrative law for a specific Jurisdiction. Laws contain Divisions. Please see the Court and Opinion schemas for case law.
@@ -176,13 +148,41 @@ components:
       - key
       - jurisdiction_key
       - law_type
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
+    Court:
+      description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
+      type: object
+      properties:
+        key:
+          type: string
+          example: scotus
+          description: Unique identifier for the court
+        jurisdiction_key:
+          type: string
+          example: FED
+          description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        parent_court_key:
+          type:
+          - string
+          - 'null'
+          example: null
+          description: Parent court key if applicable
+        name:
+          type: string
+          example: Supreme Court of the United States
+        short_name:
+          type: string
+          example: Supreme Court
+        abbreviation:
+          type: string
+          example: SCOTUS
+        start_date:
+          allOf:
+          - $ref: '#/components/schemas/NullableDate'
+          - example: '1789-09-24'
+        end_date:
+          allOf:
+          - $ref: '#/components/schemas/NullableDate'
+          - example: null
   responses:
     unauthorized:
       description: 401 Unauthorized. Please check your API Bearer token.

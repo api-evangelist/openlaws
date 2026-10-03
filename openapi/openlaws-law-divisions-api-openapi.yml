@@ -262,60 +262,70 @@ paths:
           $ref: '#/components/responses/serverError'
       operationId: lookupByBluebookCitation
 components:
-  schemas:
-    DivisionDisplay:
-      description: Minimal subset of Division properties. Useful for building lists and drill downs of Division hierarchies.
-      type: object
-      properties:
-        display_name:
-          type: string
-          example: 'Title 1: Government'
-          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
-        path:
-          type: string
-          example: title_1
-          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
-      required:
-      - display_name
-      - path
-    Date:
-      description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
-      type: string
-      oneOf:
-      - type: string
-        format: date
-        description: An ISO 8601 date string (e.g., "2025-04-17").
-        example: '2025-12-31'
-      - type: string
-        enum:
-        - Infinity
-        - -Infinity
-        description: Represents positive infinity ("Infinity") or negative infinity ("-Infinity").
-      - type: 'null'
-        description: Represents an unset or not applicable date.
-      example: Infinity
-    Error:
-      description: RFC9457 Problem Details
-      type: object
-      properties:
-        status:
-          type: integer
-          example: 404
-        title:
-          type: string
-        instance:
-          type: string
-        type:
-          type: string
-        details:
-          type: string
-        errors:
-          type: array
-          items:
+  responses:
+    okArrayOfDivisions:
+      description: Array of Divisions
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/Division'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    okSingleDivision:
+      description: Single Division
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Division'
+    okArrayOfDivisionUpdates:
+      description: Array of DivisionUpdates
+      headers:
+        link:
+          description: Comma-separated list of RFC-8288 links. The URL will be enclosed by angle brackets. A semicolon will separate the URL from the relationship description. The relationship will be a key-value pair in the form of rel="{{relationship}}". The relationship will either be "first" or "next". This describes which page the related URL will fetch.
+          schema:
             type: string
-      required:
-      - status
-      - title
+            example: <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page&limit=200>; rel="first", <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page=eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9&limit=200>; rel="next"
+        current-page:
+          description: Page ID for the current page
+          schema:
+            type: string
+            example: eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9
+        page-items:
+          description: Number of items on each page. This matches the limit param.
+          schema:
+            type: integer
+            example: 200
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DivisionUpdate'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    serverError:
+      description: 500 Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    badRequest:
+      description: 400 Bad Request. Please check your jurisdiction and citation format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
     Division:
       description: Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.
       type: object
@@ -581,6 +591,44 @@ components:
       - display_children
       - is_repealed
       - renumbered
+    Date:
+      description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
+      type: string
+      oneOf:
+      - type: string
+        format: date
+        description: An ISO 8601 date string (e.g., "2025-04-17").
+        example: '2025-12-31'
+      - type: string
+        enum:
+        - Infinity
+        - -Infinity
+        description: Represents positive infinity ("Infinity") or negative infinity ("-Infinity").
+      - type: 'null'
+        description: Represents an unset or not applicable date.
+      example: Infinity
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
     DivisionUpdate:
       description: '**(Law Firm and Enterprise plans only)** Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.'
       type: object
@@ -642,6 +690,21 @@ components:
       - effective_date_start
       - effective_date_end
       - updated_at
+    DivisionDisplay:
+      description: Minimal subset of Division properties. Useful for building lists and drill downs of Division hierarchies.
+      type: object
+      properties:
+        display_name:
+          type: string
+          example: 'Title 1: Government'
+          description: 'OpenLaws concatenation of the division_type, identifier, and name along with some business logic to create a reliable, human-friendly string to use for display for this Division. For example, ''Title 12: Banking and Finance'''
+        path:
+          type: string
+          example: title_1
+          description: The concatenation of all of the Division's ancestors' labels resulting in a filepath-like string
+      required:
+      - display_name
+      - path
     NullableDate:
       description: Nullable ISO 8601 Date
       type:
@@ -649,82 +712,23 @@ components:
       - 'null'
       format: date
       example: '1776-04-01'
-  responses:
-    okArrayOfDivisions:
-      description: Array of Divisions
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/Division'
-    badRequest:
-      description: 400 Bad Request. Please check your jurisdiction and citation format.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    unauthorized:
-      description: 401 Unauthorized. Please check your API Bearer token.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    serverError:
-      description: 500 Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    okSingleDivision:
-      description: Single Division
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Division'
-    okArrayOfDivisionUpdates:
-      description: Array of DivisionUpdates
-      headers:
-        link:
-          description: Comma-separated list of RFC-8288 links. The URL will be enclosed by angle brackets. A semicolon will separate the URL from the relationship description. The relationship will be a key-value pair in the form of rel="{{relationship}}". The relationship will either be "first" or "next". This describes which page the related URL will fetch.
-          schema:
-            type: string
-            example: <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page&limit=200>; rel="first", <http://localhost:3000/api/v1/jurisdictions/FED/laws/FED-USC/divisions/updates?updated_after=2025-01-30&page=eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9&limit=200>; rel="next"
-        current-page:
-          description: Page ID for the current page
-          schema:
-            type: string
-            example: eyJwYXRoIjoidGl0bGVfMTYuY2hhcHRlcl84Ny5zZWN0aW9uXzY4MDMiLCJpZCI6IjA2YTVlOTY2LWFkZTQtNDZiZC1hM2VlLTcxZGZmZjk0Zjk1ZiJ9
-        page-items:
-          description: Number of items on each page. This matches the limit param.
-          schema:
-            type: integer
-            example: 200
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/DivisionUpdate'
-    notFound:
-      description: 404 Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   parameters:
-    queryTypeParam:
-      name: type
+    withFederalParam:
+      name: with_federal
       in: query
       required: false
       schema:
+        type: boolean
+        default: false
+      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
+    lawKeyParam:
+      name: law_key
+      in: path
+      required: true
+      schema:
         type: string
-        default: or
-        enum:
-        - or
-        - and
-        - phrase
-      description: Search type. Default is 'or'.
+        example: FED-CFR
+      description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
     pageParam:
       name: page
       in: query
@@ -741,14 +745,18 @@ components:
         minimum: 1
         default: 10
       description: Maximum number of results to return
-    lawKeyParam:
-      name: law_key
-      in: path
-      required: true
+    queryTypeParam:
+      name: type
+      in: query
+      required: false
       schema:
         type: string
-        example: FED-CFR
-      description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
+        default: or
+        enum:
+        - or
+        - and
+        - phrase
+      description: Search type. Default is 'or'.
     keywordQueryParam:
       name: query
       in: query
@@ -757,14 +765,6 @@ components:
         type: string
         example: apple
       description: One or more keywords to search by
-    withFederalParam:
-      name: with_federal
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
     jurisdictionKeyParam:
       name: jurisdiction_key
       in: path
