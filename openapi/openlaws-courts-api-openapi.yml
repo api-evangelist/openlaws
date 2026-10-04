@@ -64,42 +64,6 @@ paths:
           $ref: '#/components/responses/notFound'
       operationId: getCourt
 components:
-  parameters:
-    courtKeyParam:
-      name: court_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: scotus
-      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
-    jurisdictionKeyParam:
-      name: jurisdiction_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: FED
-      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
-  responses:
-    badRequest:
-      description: 400 Bad Request. Please check your jurisdiction and citation format.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    unauthorized:
-      description: 401 Unauthorized. Please check your API Bearer token.
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    notFound:
-      description: 404 Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
   schemas:
     Error:
       description: RFC9457 Problem Details
@@ -123,13 +87,6 @@ components:
       required:
       - status
       - title
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
     Court:
       description: Represents a single Court and closely aligns to CourtListener's data set. Courts contain Opinions.
       type: object
@@ -165,6 +122,49 @@ components:
           allOf:
           - $ref: '#/components/schemas/NullableDate'
           - example: null
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
+  responses:
+    badRequest:
+      description: 400 Bad Request. Please check your jurisdiction and citation format.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+    courtKeyParam:
+      name: court_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: scotus
+      description: Unique identifier for a Court. See the /jurisdictions/{jurisdiction_key}/courts endpoint for possible values.
   securitySchemes:
     bearerAuth:
       description: Authenticate API requests via a bearer token

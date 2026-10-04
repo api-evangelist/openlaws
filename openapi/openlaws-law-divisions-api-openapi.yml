@@ -262,17 +262,76 @@ paths:
           $ref: '#/components/responses/serverError'
       operationId: lookupByBluebookCitation
 components:
+  parameters:
+    keywordQueryParam:
+      name: query
+      in: query
+      required: true
+      schema:
+        type: string
+        example: apple
+      description: One or more keywords to search by
+    lawKeyParam:
+      name: law_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED-CFR
+      description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
+    jurisdictionKeyParam:
+      name: jurisdiction_key
+      in: path
+      required: true
+      schema:
+        type: string
+        example: FED
+      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+    limitParam:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 10
+      description: Maximum number of results to return
+    queryTypeParam:
+      name: type
+      in: query
+      required: false
+      schema:
+        type: string
+        default: or
+        enum:
+        - or
+        - and
+        - phrase
+      description: Search type. Default is 'or'.
+    pageParam:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Combines with `limit` to implement cursor-based pagination. This parameter sets the cursor to the next page of data.
+    withFederalParam:
+      name: with_federal
+      in: query
+      required: false
+      schema:
+        type: boolean
+        default: false
+      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
   responses:
-    okArrayOfDivisions:
-      description: Array of Divisions
+    serverError:
+      description: 500 Internal Server Error
       content:
         application/json:
           schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/Division'
-    unauthorized:
-      description: 401 Unauthorized. Please check your API Bearer token.
+            $ref: '#/components/schemas/Error'
+    badRequest:
+      description: 400 Bad Request. Please check your jurisdiction and citation format.
       content:
         application/json:
           schema:
@@ -283,6 +342,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Division'
+    notFound:
+      description: 404 Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
     okArrayOfDivisionUpdates:
       description: Array of DivisionUpdates
       headers:
@@ -307,25 +372,43 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/DivisionUpdate'
-    notFound:
-      description: 404 Not Found
+    okArrayOfDivisions:
+      description: Array of Divisions
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
-    serverError:
-      description: 500 Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Error'
-    badRequest:
-      description: 400 Bad Request. Please check your jurisdiction and citation format.
+            type: array
+            items:
+              $ref: '#/components/schemas/Division'
+    unauthorized:
+      description: 401 Unauthorized. Please check your API Bearer token.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
   schemas:
+    Error:
+      description: RFC9457 Problem Details
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 404
+        title:
+          type: string
+        instance:
+          type: string
+        type:
+          type: string
+        details:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+      - status
+      - title
     Division:
       description: Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.
       type: object
@@ -591,44 +674,13 @@ components:
       - display_children
       - is_repealed
       - renumbered
-    Date:
-      description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
-      type: string
-      oneOf:
-      - type: string
-        format: date
-        description: An ISO 8601 date string (e.g., "2025-04-17").
-        example: '2025-12-31'
-      - type: string
-        enum:
-        - Infinity
-        - -Infinity
-        description: Represents positive infinity ("Infinity") or negative infinity ("-Infinity").
-      - type: 'null'
-        description: Represents an unset or not applicable date.
-      example: Infinity
-    Error:
-      description: RFC9457 Problem Details
-      type: object
-      properties:
-        status:
-          type: integer
-          example: 404
-        title:
-          type: string
-        instance:
-          type: string
-        type:
-          type: string
-        details:
-          type: string
-        errors:
-          type: array
-          items:
-            type: string
-      required:
-      - status
-      - title
+    NullableDate:
+      description: Nullable ISO 8601 Date
+      type:
+      - string
+      - 'null'
+      format: date
+      example: '1776-04-01'
     DivisionUpdate:
       description: '**(Law Firm and Enterprise plans only)** Divisions are the primary building block in OpenLaws. Each Division represents a document at a snapshot in time. Divisions can contain child Divisions (and thus also have parent and ancestor Divisions). OpenLaws strives to closely align with the source material including errors and omissions in the source.'
       type: object
@@ -705,74 +757,22 @@ components:
       required:
       - display_name
       - path
-    NullableDate:
-      description: Nullable ISO 8601 Date
-      type:
-      - string
-      - 'null'
-      format: date
-      example: '1776-04-01'
-  parameters:
-    withFederalParam:
-      name: with_federal
-      in: query
-      required: false
-      schema:
-        type: boolean
-        default: false
-      description: When with_federal=`true` with a state jurisdiction_key argument, the Federal jurisdiction will also be included in the search scope.
-    lawKeyParam:
-      name: law_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: FED-CFR
-      description: A unique identifier for OpenLaws Laws. A `law_key` is a combination of a jurisdiction_key and an abbreviation of a law type joined by a '-' character.
-    pageParam:
-      name: page
-      in: query
-      required: false
-      schema:
-        type: string
-      description: Combines with `limit` to implement cursor-based pagination. This parameter sets the cursor to the next page of data.
-    limitParam:
-      name: limit
-      in: query
-      required: false
-      schema:
-        type: integer
-        minimum: 1
-        default: 10
-      description: Maximum number of results to return
-    queryTypeParam:
-      name: type
-      in: query
-      required: false
-      schema:
-        type: string
-        default: or
+    Date:
+      description: ISO Date with additional support for positive and negative Infinity values to represent ranges.
+      type: string
+      oneOf:
+      - type: string
+        format: date
+        description: An ISO 8601 date string (e.g., "2025-04-17").
+        example: '2025-12-31'
+      - type: string
         enum:
-        - or
-        - and
-        - phrase
-      description: Search type. Default is 'or'.
-    keywordQueryParam:
-      name: query
-      in: query
-      required: true
-      schema:
-        type: string
-        example: apple
-      description: One or more keywords to search by
-    jurisdictionKeyParam:
-      name: jurisdiction_key
-      in: path
-      required: true
-      schema:
-        type: string
-        example: FED
-      description: Two to three letter Jurisdiction Key. `FED` for federal and generally, the postal abbreviation for most U.S. states and territories.
+        - Infinity
+        - -Infinity
+        description: Represents positive infinity ("Infinity") or negative infinity ("-Infinity").
+      - type: 'null'
+        description: Represents an unset or not applicable date.
+      example: Infinity
   securitySchemes:
     bearerAuth:
       description: Authenticate API requests via a bearer token

@@ -48,14 +48,6 @@ paths:
       operationId: getLaws
 components:
   schemas:
-    LawFeature:
-      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
-      type: object
-      properties:
-        name:
-          type: string
-        available:
-          type: boolean
     Error:
       description: RFC9457 Problem Details
       type: object
@@ -78,6 +70,14 @@ components:
       required:
       - status
       - title
+    LawFeature:
+      description: Describes whether a Law has a type of data, e.g., rich text content, formatted tables.
+      type: object
+      properties:
+        name:
+          type: string
+        available:
+          type: boolean
     Law:
       type: object
       description: Laws represent one type of codified or administrative law for a specific Jurisdiction. Laws contain Divisions. Please see the Court and Opinion schemas for case law.
