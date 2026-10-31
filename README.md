@@ -1,4 +1,4 @@
-# OpenLaws (openlaws)
+# OpenLaws
 
 <!-- API-EVANGELIST-PROVENANCE:BEGIN -->
 > ### About this repository
@@ -66,88 +66,133 @@
 
 OpenLaws is a Public Benefit Corporation that provides programmatic access to U.S. law text — federal and state statutes, regulations, constitutions, and case law — through a unified Legal Data API. The platform exposes keyword and citation search, hierarchical division retrieval, historical versions with redline comparisons, citation parsing and validation, and deep links to authoritative government sources. Coverage spans 53 U.S. jurisdictions (50 states + D.C. + Puerto Rico + Federal) with more than 4.3 million law sections under a single data model, targeted at RegTech, LegalTech, GRC / IRM, generative AI / RAG, and legal research workloads.
 
-**APIs.json:** [https://raw.githubusercontent.com/api-evangelist/openlaws/refs/heads/main/apis.yml](https://raw.githubusercontent.com/api-evangelist/openlaws/refs/heads/main/apis.yml)
+**Areas:** Legal · Law · Statutes · Regulations · Constitutions · Case Law · Citations · Search · RAG · Legal Tech · RegTech · Compliance
 
-## Scope
+## OpenLaws on APIs.io
 
-- **Type:** Index
-- **Position:** Consumer
-- **Access:** 3rd-Party
+Everything profiled for OpenLaws is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/openlaws/](https://apis.io/providers/openlaws/)** — or go straight to one of the APIs or properties below.
 
-## Tags
+### APIs (5)
 
-- Legal
-- Law
-- Statutes
-- Regulations
-- Constitutions
-- Case Law
-- Citations
-- Search
-- RAG
-- LegalTech
-- RegTech
-- Compliance
-- GRC
-- Government Data
+- [OpenLaws Courts API](https://apis.io/apis/openlaws/openlaws-courts-api/) — Courts issue Opinions and belong to a Jurisdiction.
+- [OpenLaws Jurisdictions API](https://apis.io/apis/openlaws/openlaws-jurisdictions-api/) — All data (statutes, regulations, caselaw opinions) in OpenLaws are organized into jurisdictions. This allows you to scope searches and lookups to a specific…
+- [OpenLaws Law Divisions API](https://apis.io/apis/openlaws/openlaws-law-divisions-api/) — Divisions represent the hierarchical documents that make up statutes, regulations, and constitutions. Each document has a 'path' which uniquely identifies…
+- [OpenLaws Laws API](https://apis.io/apis/openlaws/openlaws-laws-api/) — Laws represent a specific law type in a Jurisdiction. For example, Code of Federal Regulations belongs to the FED Jurisdiction and is represented by the…
+- [OpenLaws Opinions API](https://apis.io/apis/openlaws/openlaws-opinions-api/) — Opinions represent published and unpublished case law opinions. Opinions belong to a Court and Jurisdiction.
 
-## Timestamps
+### Published properties
 
-- **Created:** 2025-03-01
-- **Modified:** 2026-05-21
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
 
-## APIs
+#### MCP servers (1)
 
-### OpenLaws Legal Data API
+Model Context Protocol servers that expose the API to agents.
 
-The OpenLaws Legal Data API exposes statutes, regulations, constitutions, and case law across 53 U.S. jurisdictions through a unified data model. It supports keyword and BM25 / hybrid search scoped by jurisdiction, law type, or court; hierarchical Division retrieval over the structured law tree; Bluebook citation parsing, validation, and lookup; historical versions of Divisions with diff / redline comparison (Enterprise); and deep linking back to authoritative government sources for use in legal research, compliance workflows, and AI / RAG applications.
+- [openlaws](https://apis.io/servers/openlaws/openlaws/)
 
-- **Human URL:** [https://openlaws.us/api/](https://openlaws.us/api/)
-- **Base URL:** `https://api.openlaws.us`
+#### Agentic access (1)
 
-#### Tags
+Which operations an agent can call, which act, and which need a human in the loop.
 
-- Legal
-- Law
-- Statutes
-- Regulations
-- Constitutions
-- Case Law
-- Search
-- Citations
-- Jurisdictions
-- Courts
+- [Openlaws Agentic Access](https://apis.io/agentic-access/openlaws/openlaws-agentic-access/)
 
-#### Properties
+#### Collections (6)
 
-- [Documentation](https://openlaws.apidocumentation.com)
-- [Human U R L](https://openlaws.us/api/)
-- [Getting Started](https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api)
-- [Sign Up](https://1be187uhimk.typeform.com/to/PwYQaCu4)
-- [Changelog](https://openlaws.apidocumentation.com/guide/release-notes)
-- [Terms of Service](https://openlaws.us/terms)
-- [OpenAPI](openapi/openlaws-openapi.yml) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Postman Collection](collections/openlaws.postman_collection.json) — [Postman Collection 2.1](https://schema.getpostman.com/json/collection/v2.1.0/collection.json)
-- [Open Collection](collections/openlaws.opencollection.json) — [Open Collection 1.0](https://schema.opencollection.com/opencollection/v1.0.0.json)
-- [OpenAPI](openapi/openlaws-openapi.json) — [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
-- [Plan](plans/openlaws-plans-pricing.yml)
-- [Rate  Limit](rate-limits/openlaws-rate-limits.yml)
-- [Fin Ops](finops/openlaws-finops.yml)
+Postman and Open Collection request collections.
 
-## Common Properties
+- [OpenLaws API Documentation](https://apis.io/collections/openlaws/open-openlaws/)
+- [OpenLaws API Documentation Courts API](https://apis.io/collections/openlaws/open-openlaws-courts-api/)
+- [OpenLaws API Documentation Courts Jurisdictions API](https://apis.io/collections/openlaws/open-openlaws-jurisdictions-api/)
+- [OpenLaws API Documentation Courts Law Divisions API](https://apis.io/collections/openlaws/open-openlaws-law-divisions-api/)
+- [OpenLaws API Documentation Courts Laws API](https://apis.io/collections/openlaws/open-openlaws-laws-api/)
+- [OpenLaws API Documentation Courts Opinions API](https://apis.io/collections/openlaws/open-openlaws-opinions-api/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Openlaws Authentication](https://apis.io/security/openlaws/openlaws-authentication/)
+- [Openlaws Domain Security](https://apis.io/security/openlaws/openlaws-domain-security/)
+
+#### Plans and pricing (1)
+
+Published plans, tiers and prices.
+
+- [Openlaws Plans Pricing](https://apis.io/plans/openlaws/openlaws-plans-pricing/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Openlaws Rate Limits](https://apis.io/rate-limits/openlaws/openlaws-rate-limits/)
+
+#### FinOps (1)
+
+What the API costs to run, by operation.
+
+- [Openlaws Finops](https://apis.io/finops/openlaws/openlaws-finops/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
 
 - [Website](https://openlaws.us/)
 - [Documentation](https://openlaws.apidocumentation.com)
-- [Getting Started](https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api)
-- [Sign Up](https://1be187uhimk.typeform.com/to/PwYQaCu4)
+- [Getting started](https://openlaws.apidocumentation.com/guide/openlaws-legal-data-api)
 - [Changelog](https://openlaws.apidocumentation.com/guide/release-notes)
-- [Terms of Service](https://openlaws.us/terms)
-- [Contact Email](mailto:team@openlaws.us)
-- [Plan](plans/openlaws-plans-pricing.yml)
-- [Rate  Limit](rate-limits/openlaws-rate-limits.yml)
-- [Fin Ops](finops/openlaws-finops.yml)
+- [Terms of service](https://openlaws.us/terms)
 
-## Maintainers
+## API Evangelist rating
 
-**FN:** Kin Lane
-**Email:** kin@apievangelist.com
+**Kin Score 31.4** — thin · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 68.3 |
+| Contract quality | 50.3 |
+| Contract governance | 0.0 |
+| Operational transparency | 7.9 |
+| Developer ergonomics | 21.4 |
+| Access clarity | 31.6 |
+
+**Agent readiness 46.4** — agent-ready (gated down from agent-native)
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | na |
+| MCP Server | verified |
+| Auth Clarity | served (partial credit) |
+| Idempotency | na |
+| Error Semantics | — |
+| OpenAPI Examples | partial |
+| Rate Limit Signal | derived (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | — |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | na |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | — |
+| Agentic Commerce | — |
+| Pagination Ratio | partial |
+| Operation Distinctiveness | — |
+
+**Regulatory alignment 15.7** — Government & Public Sector
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/openlaws/](https://apis.io/providers/openlaws/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for OpenLaws: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/openlaws/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
